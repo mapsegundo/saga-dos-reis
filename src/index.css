@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos personalizados */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+      "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #0a0a0a;
+    color: #f0f0f0;
+    background-image: url("./assets/background.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "MedievalSharp", cursive;
+    color: #d4af37;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+      monospace;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply font-['MedievalSharp'] cursor-pointer bg-[#8b4513] text-[#f0f0f0] border-2 border-[#d4af37] py-2 px-5 rounded transition-all duration-300 ease-in-out;
+  }
+
+  .btn:hover {
+    @apply bg-[#a0522d] transform -translate-y-0.5 shadow-lg;
+  }
+
+  .btn:active {
+    @apply transform translate-y-0 shadow-md;
+  }
+
+  .input {
+    @apply bg-black/70 border border-[#d4af37] text-[#f0f0f0] p-2.5 rounded text-base mb-4;
+  }
+
+  .link {
+    @apply text-[#d4af37] no-underline transition-colors duration-300;
+  }
+
+  .link:hover {
+    @apply text-[#ffd700] underline;
+  }
+}
+
+/* Garantir que todos os elementos mantenham suas dimensões */
+* {
+  box-sizing: border-box;
+}
+
+/* Estilos para garantir consistência no layout do jogo */
+.game-container {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: 3fr 2fr;
+  grid-template-areas:
+    "main sidebar"
+    "dialog actions";
+  gap: 20px;
+  height: calc(100vh - 120px);
+  padding: 20px;
+}
+
+.game-content-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #8b4513;
+  border-radius: 8px;
+  padding: 15px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.game-main-content {
+  grid-area: main;
+  height: 100%;
+  overflow: auto;
+  min-height: 300px;
+}
+
+.game-sidebar-content {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 300px;
+}
+
+.game-dialog-content {
+  grid-area: dialog;
+  height: 100%;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.game-actions-content {
+  grid-area: actions;
+  height: 100%;
+  min-height: 200px;
+  overflow: auto;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .game-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "main"
+      "sidebar"
+      "dialog"
+      "actions";
+    height: auto;
+    min-height: calc(100vh - 120px);
+  }
+
+  .game-content-wrapper {
+    margin-bottom: 20px;
+  }
+}
