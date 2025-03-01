@@ -16,16 +16,22 @@ import { GameProvider } from "./context/GameContext";
 const AppContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    padding: 0 10px;
+  }
 `;
 
 const MainContent = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: visible;
+  margin-bottom: 20px;
 `;
 
 function App() {

@@ -11,7 +11,7 @@
   html,
   body {
     height: 100%;
-    overflow: hidden;
+    overflow-y: auto;
   }
 
   #root {
@@ -50,6 +50,16 @@
   code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
       monospace;
+  }
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+  body,
+  html,
+  #root {
+    height: auto;
+    min-height: 100vh;
   }
 }
 
