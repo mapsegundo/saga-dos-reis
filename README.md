@@ -2,8 +2,6 @@
 
 Um jogo de RPG interativo baseado em React, onde apenas os mais dignos ascendem ao trono.
 
-![Saga dos Reis](./public/logo.png)
-
 ## Sobre o Jogo
 
 No reino de Elbion, mergulhado no caos após a destruição das antigas linhagens reais, uma profecia anuncia que cinco provações forjarão um verdadeiro rei. Você é um dos escolhidos para essa jornada, e sua ascensão ao trono dependerá de suas escolhas, habilidades e coragem.
