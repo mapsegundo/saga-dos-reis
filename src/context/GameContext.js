@@ -56,6 +56,23 @@ export const GameProvider = ({ children }) => {
     introductionShown: false,
   });
 
+  // DEBUG - Monitorar mudanças na vida e mana do jogador
+  useEffect(() => {
+    // Verificar se o jogador está inicializado para evitar logs desnecessários na inicialização
+    if (player.name && (player.health > 0 || player.mana > 0)) {
+      // Logs mais limpos para informações do jogador
+      console.log(
+        `GameContext - Jogador atualizado: Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+      );
+    }
+  }, [
+    player.health,
+    player.mana,
+    player.name,
+    player.maxHealth,
+    player.maxMana,
+  ]);
+
   // Funções para manipular o estado do jogador
   const updatePlayer = (newPlayerData) => {
     setPlayer((prev) => ({ ...prev, ...newPlayerData }));
@@ -85,7 +102,26 @@ export const GameProvider = ({ children }) => {
       maxMana: selectedClass.baseMana,
       experience: 0,
       gold: 10,
-      inventory: [...(selectedClass.startingItems || [])],
+      inventory: [
+        {
+          id: "health_potion",
+          name: "Poção de Cura 🧪",
+          type: "consumable",
+          effect: "heal",
+          value: 30,
+          amount: 3,
+          description: "Restaura 30 pontos de vida quando consumida.",
+        },
+        {
+          id: "mana_potion",
+          name: "Poção de Mana ✨",
+          type: "consumable",
+          effect: "mana",
+          value: 30,
+          amount: 3,
+          description: "Restaura 30 pontos de mana quando consumida.",
+        },
+      ],
       equipment: {
         weapon: selectedClass.startingWeapon || null,
         armor: selectedClass.startingArmor || null,
@@ -143,6 +179,9 @@ export const GameProvider = ({ children }) => {
 
   // Avançar para a próxima fase
   const advancePhase = () => {
+    // Log simples para identificar quando esta função é chamada
+    console.log("INFO: Avançando para a próxima fase");
+
     const nextPhase = gameState.currentPhase + 1;
 
     if (nextPhase < phases.length) {
@@ -214,8 +253,7 @@ export const GameProvider = ({ children }) => {
         const updatedInventory = [...prev.inventory];
         updatedInventory[existingItemIndex] = {
           ...updatedInventory[existingItemIndex],
-          quantity:
-            (updatedInventory[existingItemIndex].quantity || 1) + quantity,
+          amount: (updatedInventory[existingItemIndex].amount || 1) + quantity,
         };
         return {
           ...prev,
@@ -225,7 +263,7 @@ export const GameProvider = ({ children }) => {
         // Se o item não existe, adicionar ao inventário
         return {
           ...prev,
-          inventory: [...prev.inventory, { id: itemId, quantity }],
+          inventory: [...prev.inventory, { id: itemId, amount: quantity }],
         };
       }
     });
@@ -241,17 +279,16 @@ export const GameProvider = ({ children }) => {
 
       if (existingItemIndex >= 0) {
         const updatedInventory = [...prev.inventory];
-        const currentQuantity =
-          updatedInventory[existingItemIndex].quantity || 1;
+        const currentAmount = updatedInventory[existingItemIndex].amount || 1;
 
-        if (currentQuantity <= quantity) {
+        if (currentAmount <= quantity) {
           // Se a quantidade a ser removida for maior ou igual à quantidade atual, remover o item
           updatedInventory.splice(existingItemIndex, 1);
         } else {
           // Caso contrário, diminuir a quantidade
           updatedInventory[existingItemIndex] = {
             ...updatedInventory[existingItemIndex],
-            quantity: currentQuantity - quantity,
+            amount: currentAmount - quantity,
           };
         }
 
@@ -294,36 +331,82 @@ export const GameProvider = ({ children }) => {
     }
   };
 
-  // Ganhar experiência
+  // Função utilitária para calcular a experiência necessária para o próximo nível
+  const calculateExpToNextLevel = (currentLevel) => {
+    // Fórmula base: nível atual * 100
+    return currentLevel * 100;
+  };
+
+  // Função para ganhar experiência
   const gainExperience = (amount) => {
-    const newExperience = player.experience + amount;
-    const experienceToLevelUp = player.level * 100;
+    console.log(`INFO: Ganhando ${amount} pontos de experiência`);
 
-    if (newExperience >= experienceToLevelUp) {
-      // Level up
-      const newLevel = player.level + 1;
-      const remainingExp = newExperience - experienceToLevelUp;
+    // Calcular nova experiência
+    const newExp = player.experience + amount;
+    let newLevel = player.level;
+    let leveledUp = false;
 
-      setPlayer((prev) => ({
-        ...prev,
-        level: newLevel,
-        experience: remainingExp,
-        maxHealth: prev.maxHealth + 10,
-        health: prev.maxHealth + 10,
-        maxMana: prev.maxMana + 5,
-        mana: prev.maxMana + 5,
-      }));
-
-      addDialog("Sistema", `Parabéns! Você subiu para o nível ${newLevel}!`);
-    } else {
-      setPlayer((prev) => ({
-        ...prev,
-        experience: newExperience,
-      }));
+    // Verificar se o jogador subiu de nível
+    const expToNextLevel = calculateExpToNextLevel(player.level);
+    if (newExp >= expToNextLevel) {
+      newLevel = player.level + 1;
+      leveledUp = true;
+      console.log(
+        `INFO: Level up para nível ${newLevel}! Restaurando vida e mana.`
+      );
     }
 
-    // Adicionar diálogo informando sobre a experiência ganha
-    addDialog("Sistema", `Você ganhou ${amount} pontos de experiência.`);
+    // Atualizar o jogador
+    setPlayer((prevPlayer) => {
+      // Apenas restaurar vida e mana se o jogador subiu de nível
+      if (leveledUp) {
+        // Calculando novos valores máximos
+        const newMaxHealth = Math.floor(prevPlayer.maxHealth * 1.2);
+        const newMaxMana = Math.floor(prevPlayer.maxMana * 1.15);
+
+        console.log("Level up! Novos valores máximos calculados:");
+        console.log(`Vida máxima: ${prevPlayer.maxHealth} -> ${newMaxHealth}`);
+        console.log(`Mana máxima: ${prevPlayer.maxMana} -> ${newMaxMana}`);
+
+        // Ao subir de nível, restauramos completamente a vida e mana
+        return {
+          ...prevPlayer,
+          level: newLevel,
+          experience: newExp - expToNextLevel,
+          maxHealth: newMaxHealth,
+          health: newMaxHealth, // Restaurar vida ao máximo APENAS ao subir de nível
+          maxMana: newMaxMana,
+          mana: newMaxMana, // Restaurar mana ao máximo APENAS ao subir de nível
+          attributePoints: prevPlayer.attributePoints + 3,
+        };
+      } else {
+        // Se não subiu de nível, apenas atualiza a experiência sem restaurar vida/mana
+        console.log(
+          "Apenas ganhando XP, sem subir de nível. Mantendo vida/mana atuais."
+        );
+        return {
+          ...prevPlayer,
+          experience: newExp,
+        };
+      }
+    });
+
+    // Adicionar mensagens informativas após processar a experiência
+    if (leveledUp) {
+      addDialog("Sistema", `Parabéns! Você subiu para o nível ${newLevel}!`);
+      addDialog("Sistema", `Sua vida e mana foram completamente restauradas!`);
+    }
+
+    // Sempre adicionar informação sobre a experiência ganha
+    addDialog("Sistema", `Você ganhou ${amount} pontos de experiência!`);
+
+    setTimeout(() => {
+      console.log("Valores do jogador APÓS gainExperience:");
+      console.log(
+        `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+      );
+      console.log(`Subiu de nível: ${leveledUp}`);
+    }, 50);
   };
 
   // Ganhar ou perder ouro
@@ -356,6 +439,14 @@ export const GameProvider = ({ children }) => {
     }));
   };
 
+  // Definir vida para um valor específico
+  const setHealth = (exactValue) => {
+    setPlayer((prev) => ({
+      ...prev,
+      health: Math.max(0, Math.min(exactValue, prev.maxHealth)),
+    }));
+  };
+
   // Usar mana
   const useMana = (amount) => {
     const newMana = Math.max(0, player.mana - amount);
@@ -383,20 +474,69 @@ export const GameProvider = ({ children }) => {
 
   // Atualizar mana (função adicional para compatibilidade)
   const updateMana = (newMana) => {
+    if (typeof newMana !== "number" || isNaN(newMana)) {
+      console.error(`updateMana: Valor inválido recebido: ${newMana}`);
+      return;
+    }
+
+    console.log(`updateMana CHAMADA com valor: ${newMana}`);
+    console.log(
+      `Mana atual antes da atualização: ${player.mana}/${player.maxMana}`
+    );
+
+    const clampedMana = Math.max(0, Math.min(newMana, player.maxMana));
+    console.log(`Valor final após ajuste: ${clampedMana}`);
+
     setPlayer((prevPlayer) => {
-      return {
+      // Registrar para verificar se o estado anterior está correto
+      console.log(
+        `Estado anterior no setPlayer: ${prevPlayer.mana}/${prevPlayer.maxMana}`
+      );
+
+      const updatedPlayer = {
         ...prevPlayer,
-        mana: Math.max(0, Math.min(newMana, prevPlayer.maxMana)),
+        mana: clampedMana,
       };
+
+      // Registrar o novo estado para confirmar
+      console.log(
+        `Novo estado após atualização: ${updatedPlayer.mana}/${updatedPlayer.maxMana}`
+      );
+
+      return updatedPlayer;
     });
+
+    // Verificar após a atualização
+    setTimeout(() => {
+      console.log(
+        `Verificação após updateMana: ${player.mana}/${player.maxMana}`
+      );
+    }, 50);
   };
 
   // Completar missão
   const completeMission = (missionId) => {
+    // DEBUG - Log para identificar quando completeMission é chamada
+    console.log("FUNÇÃO completeMission CHAMADA para missão:", missionId);
+
     const currentPhaseData = phases[gameState.currentPhase];
     const mission = currentPhaseData.missions.find((m) => m.id === missionId);
 
     if (mission) {
+      console.log("Missão encontrada:", mission.name);
+      console.log("Estrutura completa da missão:", mission);
+
+      // Verificar se a missão já está completa
+      const isAlreadyCompleted = gameState.questLog.some(
+        (q) => q.id === missionId && q.completed
+      );
+
+      if (isAlreadyCompleted) {
+        console.log("Esta missão já foi completada anteriormente, ignorando.");
+        return;
+      }
+
+      // Marcar a missão como completa no questLog
       setGameState((prev) => ({
         ...prev,
         questLog: prev.questLog.map((q) =>
@@ -404,16 +544,64 @@ export const GameProvider = ({ children }) => {
         ),
       }));
 
+      // Criar mensagem de recompensa
+      let rewardMessage = `Missão "${mission.name}" completada!`;
+
+      // Processar recompensas
+      if (mission.reward) {
+        // Entregar recompensas de experiência
+        if (mission.reward.experience) {
+          console.log(
+            "Entregando recompensa de XP:",
+            mission.reward.experience
+          );
+          gainExperience(mission.reward.experience);
+          rewardMessage += ` +${mission.reward.experience} XP.`;
+        }
+
+        // Entregar recompensas de ouro
+        if (mission.reward.gold) {
+          console.log("Entregando recompensa de ouro:", mission.reward.gold);
+          updateGold(mission.reward.gold);
+          rewardMessage += ` +${mission.reward.gold} ouro.`;
+        }
+
+        // Entregar itens de recompensa
+        if (mission.reward.items && Array.isArray(mission.reward.items)) {
+          console.log("Entregando itens de recompensa:", mission.reward.items);
+          mission.reward.items.forEach((item) => {
+            const itemId = typeof item === "object" ? item.id : item;
+            const itemName = typeof item === "object" ? item.name : itemId;
+
+            if (itemId) {
+              addToInventory(itemId, 1);
+              console.log("Item adicionado ao inventário:", itemId);
+              rewardMessage += ` +1 ${itemName}.`;
+            }
+          });
+        }
+      }
+
+      // Mostrar a mensagem de conclusão
+      addDialog("Sistema", rewardMessage);
+
       // Verificar se todas as missões da fase foram completadas
       const allMissionsCompleted = currentPhaseData.missions.every(
         (m) => gameState.questLog.find((q) => q.id === m.id)?.completed || false
       );
 
-      // Se todas as missões foram completadas, avançar para a próxima fase
+      // Se todas as missões foram completadas, mostrar mensagem
       if (allMissionsCompleted) {
-        // Implementar lógica para avançar para a próxima fase
         console.log("Todas as missões da fase foram completadas!");
+
+        // Adicionar mensagem ao diálogo
+        addDialog(
+          "Sistema",
+          "Você completou todas as missões desta fase! Fale com o prefeito para avançar para a próxima área."
+        );
       }
+    } else {
+      console.warn(`Missão com ID ${missionId} não encontrada na fase atual.`);
     }
   };
 
@@ -524,6 +712,7 @@ export const GameProvider = ({ children }) => {
     updateGold,
     takeDamage,
     heal,
+    setHealth,
     useMana,
     recoverMana,
     updateMana,

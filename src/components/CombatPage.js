@@ -188,6 +188,25 @@ const CombatPage = () => {
         }
       }
 
+      // Garantir que o inimigo tenha uma propriedade rewards para manter consistência
+      if (!enemyObject.rewards) {
+        console.log("Criando objeto rewards para o inimigo:", enemyObject.id);
+        enemyObject.rewards = {
+          exp: enemyObject.experience || 0,
+          gold: enemyObject.gold || 0,
+          items: enemyObject.items || [],
+        };
+      }
+
+      // Verificar se as recompensas estão presentes
+      console.log("Verificando recompensas do inimigo:");
+      console.log(
+        "- Experiência:",
+        enemyObject.rewards?.exp || enemyObject.experience
+      );
+      console.log("- Ouro:", enemyObject.rewards?.gold || enemyObject.gold);
+      console.log("- Itens:", enemyObject.rewards?.items || enemyObject.items);
+
       // Definir o inimigo processado apenas se o componente ainda estiver montado
       if (isMounted.current) {
         setProcessedEnemy(enemyObject);
@@ -220,6 +239,21 @@ const CombatPage = () => {
 
   // Função para lidar com o fim do combate
   const handleCombatEnd = (victory) => {
+    // Forçar o tipo para boolean para evitar problemas
+    const resultadoFinal = victory === true;
+
+    // DEBUG - Log para verificar os valores do jogador antes de finalizar o combate
+    console.log(
+      "CombatPage handleCombatEnd - Valores do jogador antes de finalizar:"
+    );
+    console.log(
+      `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+    );
+    console.log(
+      "⚠️ Resultado recebido do CombatScreen:",
+      resultadoFinal ? "VITÓRIA" : "DERROTA"
+    );
+
     // Evitar múltiplas chamadas
     if (combatFinished) {
       console.log("Combate já foi finalizado, redirecionando para o jogo");
@@ -233,12 +267,148 @@ const CombatPage = () => {
 
     console.log(
       "Combate finalizado com resultado:",
-      victory ? "vitória" : "derrota",
+      resultadoFinal ? "vitória" : "derrota",
       "ID do combate:",
       combatId
     );
+    console.log(
+      "VALORES DE MANA NO FINAL DO COMBATE (CombatPage):",
+      `${player.mana}/${player.maxMana}`
+    );
 
-    if (victory && processedEnemy) {
+    if (resultadoFinal && processedEnemy) {
+      console.log(
+        "⚠️ PROCESSANDO VITÓRIA - Garantindo que não ocorra game over"
+      );
+      // A vida e a mana do jogador já foram atualizadas pelo CombatScreen
+      // Não precisamos restaurar ou modificar nada aqui
+      // Apenas processamos a recompensa normalmente
+
+      console.log("Processando vitória contra:", processedEnemy.id);
+      console.log(
+        "Vitória - Vida atual do jogador:",
+        `${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+      );
+
+      // DEBUG - Verificar a estrutura do inimigo e suas recompensas
+      console.log("Estrutura completa do inimigo:", processedEnemy);
+
+      // =========== SISTEMA DE RECOMPENSAS AJUSTADO ===========
+
+      // 1. EXPERIÊNCIA - Sempre ganha baseado no nível e dificuldade do inimigo
+      // Garantir sempre uma recompensa mínima de experiência
+      const baseExp = processedEnemy.level ? processedEnemy.level * 15 : 15;
+      // Verificar se há recompensa definida ou usar valor calculado
+      const expReward =
+        processedEnemy.rewards?.exp || processedEnemy.experience || baseExp;
+
+      console.log("Concedendo experiência:", expReward);
+      // A função gainExperience já adiciona a mensagem de experiência ao diálogo
+      // Não precisamos adicionar uma segunda mensagem aqui
+      gainExperience(expReward);
+
+      // 2. OURO - 70% de chance de ganhar ouro
+      if (Math.random() < 0.7) {
+        // Garantir sempre uma recompensa mínima de ouro
+        const baseGold = processedEnemy.level ? processedEnemy.level * 5 : 5;
+        // Verificar se há recompensa definida ou usar valor calculado
+        const goldReward =
+          processedEnemy.rewards?.gold || processedEnemy.gold || baseGold;
+
+        console.log("Concedendo ouro:", goldReward);
+        updateGold(goldReward);
+
+        // Adicionar mensagem ao diálogo
+        setGameState((prev) => ({
+          ...prev,
+          dialogHistory: [
+            ...prev.dialogHistory,
+            {
+              speaker: "Sistema",
+              text: `Você ganhou ${goldReward} moedas de ouro!`,
+            },
+          ],
+        }));
+      }
+
+      // 3. POÇÕES - 30% de chance de ganhar poção de cura, 20% de chance de ganhar poção de mana
+      // Chance de poção de cura
+      if (Math.random() < 0.3) {
+        console.log("Concedendo poção de cura");
+        addToInventory("health_potion", 1);
+
+        setGameState((prev) => ({
+          ...prev,
+          dialogHistory: [
+            ...prev.dialogHistory,
+            {
+              speaker: "Sistema",
+              text: "Você encontrou uma Poção de Cura 🧪!",
+            },
+          ],
+        }));
+      }
+
+      // Chance de poção de mana
+      if (Math.random() < 0.2) {
+        console.log("Concedendo poção de mana");
+        addToInventory("mana_potion", 1);
+
+        setGameState((prev) => ({
+          ...prev,
+          dialogHistory: [
+            ...prev.dialogHistory,
+            {
+              speaker: "Sistema",
+              text: "Você encontrou uma Poção de Mana ✨!",
+            },
+          ],
+        }));
+      }
+
+      // 4. ITENS ESPECÍFICOS DO INIMIGO - Manter o processamento original para itens especiais
+      const rewardItems = processedEnemy.rewards?.items || processedEnemy.items;
+
+      // TEMPORARIAMENTE DESATIVADO: Recompensas de itens de equipamento
+      // Conforme solicitado pelo jogador, por enquanto só trabalhamos com experiência, poções e ouro
+      console.log("Itens de equipamento desativados temporariamente");
+
+      /* Código original comentado:
+      if (rewardItems && Array.isArray(rewardItems)) {
+        console.log("Processando itens especiais de recompensa:", rewardItems);
+        rewardItems.forEach((item) => {
+          // Se o item for uma string (ID) ou um objeto com ID
+          const itemId = typeof item === "object" ? item.id : item;
+
+          // Ignorar poções comuns que já tratamos acima
+          if (
+            itemId &&
+            itemId !== "health_potion" &&
+            itemId !== "mana_potion" &&
+            Math.random() < (item.chance || 0.2)
+          ) {
+            addToInventory(itemId, 1);
+            console.log("Item especial adicionado ao inventário:", itemId);
+
+            // Adicionar mensagem ao diálogo
+            const itemName = typeof item === "object" ? item.name : itemId;
+            setGameState((prev) => ({
+              ...prev,
+              dialogHistory: [
+                ...prev.dialogHistory,
+                {
+                  speaker: "Sistema",
+                  text: `Você obteve: ${itemName}`,
+                },
+              ],
+            }));
+          }
+        });
+      }
+      */
+
+      // =========== FIM DO SISTEMA DE RECOMPENSAS AJUSTADO ===========
+
       // Remover o inimigo derrotado da localização atual
       const currentLocation = gameState.currentLocation;
 
@@ -290,6 +460,11 @@ const CombatPage = () => {
               });
 
             if (allBanditsDefeated) {
+              // DEBUG - Verificando missão completada de bandidos
+              console.log(
+                "MISSÃO DE BANDIDOS COMPLETADA - Verificar se advancePhase é chamado após isso"
+              );
+
               // Completar a missão
               completeMission("mission1_2");
 
@@ -309,6 +484,9 @@ const CombatPage = () => {
         }
       }
     } else {
+      // Em caso de DERROTA
+      console.log("⚠️ PROCESSANDO DERROTA - Definindo gameOver como true");
+
       // Adicionar mensagem de derrota ao diálogo
       setGameState((prev) => ({
         ...prev,
@@ -319,7 +497,7 @@ const CombatPage = () => {
             text: "Você foi derrotado em combate!",
           },
         ],
-        gameOver: true,
+        gameOver: true, // Apenas em caso de derrota o gameOver deve ser true
       }));
     }
 
@@ -328,6 +506,14 @@ const CombatPage = () => {
       ...prev,
       currentEnemy: null,
     }));
+
+    // DEBUG - Log para verificar os valores do jogador antes de redirecionar
+    console.log(
+      "CombatPage handleCombatEnd - Valores do jogador antes de redirecionar:"
+    );
+    console.log(
+      `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+    );
 
     // Redirecionar para o jogo imediatamente
     console.log("Redirecionando para o jogo após o combate");
