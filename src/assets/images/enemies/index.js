@@ -2,18 +2,18 @@
 
 const enemyImages = {
   // Inimigos básicos
-  bandit: "https://via.placeholder.com/300x400?text=Bandit", // Bandido
-  wolf: "https://via.placeholder.com/300x400?text=Wolf", // Lobo
-  skeleton: "https://via.placeholder.com/300x400?text=Skeleton", // Esqueleto
+  bandit: "/images/enemies/bandit.png", // Bandido
+  wolf: "/images/enemies/wolf.png", // Lobo
+  skeleton: "/images/enemies/skeleton.png", // Esqueleto
 
   // Chefes
-  bandit_leader: "https://via.placeholder.com/300x400?text=Bandit+Leader", // Líder dos Bandidos
-  dark_knight: "https://via.placeholder.com/300x400?text=Dark+Knight", // Cavaleiro Negro
-  necromancer: "https://via.placeholder.com/300x400?text=Necromancer", // Necromante
-  king_elbion: "https://via.placeholder.com/300x400?text=King+Elbion", // Rei de Elbion
+  bandit_leader: "/images/enemies/bandit-leader.png", // Líder dos Bandidos
+  dark_knight: "/images/enemies/dark-knight.png", // Cavaleiro Negro
+  necromancer: "/images/enemies/necromancer.png", // Necromante
+  king_elbion: "/images/enemies/king-elbion.png", // Rei de Elbion
 
   // Imagem padrão
-  default: "https://via.placeholder.com/300x400?text=Default+Enemy",
+  default: "/images/enemies/default-enemy.png",
 };
 
 export default enemyImages;

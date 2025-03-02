@@ -302,9 +302,6 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
   const [victory, setVictory] = useState(false);
   const [actionsDisabled, setActionsDisabled] = useState(false);
 
-  // NOVA REF: Para armazenar o resultado do combate de forma persistente
-  const combatResultRef = useRef(false);
-
   // Referência para o log de combate
   const combatLogRef = useRef(null);
 
@@ -320,15 +317,12 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
         : "Mana não alterada"
     );
 
+    // Registrar stack trace para debug
+    console.log("Stack trace da sincronização:", new Error().stack);
+
     // Atualizar a vida localmente se um valor foi fornecido
     if (health !== undefined) {
       setPlayerHealth(health);
-
-      // NOVA VERIFICAÇÃO: Se a vida chegou a zero ou menos, processar derrota automaticamente
-      if (health <= 0 && !combatEnded) {
-        console.log("⚠️ VIDA ZERADA! Processando derrota automática...");
-        handleDefeat();
-      }
     }
 
     // Atualizar a mana localmente se um valor foi fornecido
@@ -374,13 +368,6 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
         combatEnded,
         "ID do combate:",
         combatId
-      );
-
-      // RESETAR o resultado do combate para falso
-      combatResultRef.current = false;
-      console.log(
-        "⚠️ RESETANDO RESULTADO DO COMBATE NA REF:",
-        combatResultRef.current
       );
 
       // Inicializar apenas uma vez
@@ -604,16 +591,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
   // Ataque do jogador
   const handlePlayerAttack = () => {
-    // VERIFICAÇÃO ADICIONAL: Impedir ataque se o jogador estiver com vida zerada
-    if (combatEnded || actionsDisabled || playerHealth <= 0) {
-      if (playerHealth <= 0 && !combatEnded) {
-        console.log(
-          "Tentativa de ataque com vida zerada. Processando derrota..."
-        );
-        handleDefeat();
-      }
-      return;
-    }
+    if (combatEnded || actionsDisabled) return;
 
     // Desativar ações do jogador
     setActionsDisabled(true);
@@ -652,21 +630,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
   // Habilidade especial do jogador
   const handlePlayerSpecial = () => {
-    // VERIFICAÇÃO ADICIONAL: Impedir uso de habilidade se o jogador estiver com vida zerada
-    if (
-      combatEnded ||
-      actionsDisabled ||
-      playerHealth <= 0 ||
-      playerMana < 10
-    ) {
-      if (playerHealth <= 0 && !combatEnded) {
-        console.log(
-          "Tentativa de usar habilidade com vida zerada. Processando derrota..."
-        );
-        handleDefeat();
-      }
-      return;
-    }
+    if (combatEnded || actionsDisabled || playerMana < 10) return;
 
     // Desativar ações do jogador
     setActionsDisabled(true);
@@ -721,16 +685,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
   // Usar poção
   const handleUsePotion = () => {
-    // VERIFICAÇÃO ADICIONAL: Impedir uso de poção se o jogador estiver com vida zerada
-    if (combatEnded || actionsDisabled || playerHealth <= 0) {
-      if (playerHealth <= 0 && !combatEnded) {
-        console.log(
-          "Tentativa de usar poção com vida zerada. Processando derrota..."
-        );
-        handleDefeat();
-      }
-      return;
-    }
+    if (combatEnded || actionsDisabled) return;
 
     // Verificar se o jogador tem poções
     const healthPotion = player.inventory.find(
@@ -772,16 +727,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
   // Usar poção de mana
   const handleUseManaPotion = () => {
-    // VERIFICAÇÃO ADICIONAL: Impedir uso de poção de mana se o jogador estiver com vida zerada
-    if (combatEnded || actionsDisabled || playerHealth <= 0) {
-      if (playerHealth <= 0 && !combatEnded) {
-        console.log(
-          "Tentativa de usar poção de mana com vida zerada. Processando derrota..."
-        );
-        handleDefeat();
-      }
-      return;
-    }
+    if (combatEnded || actionsDisabled) return;
 
     // Verificar se o jogador tem poções de mana
     const manaPotion = player.inventory.find(
@@ -872,11 +818,6 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
       return;
     }
 
-    // FIXME: DEFINIR O RESULTADO DO COMBATE NA REF - Isso garante que o valor persistirá
-    // independentemente do estado do componente React
-    combatResultRef.current = true;
-    console.log("🏆 DEFINIDO RESULTADO NA REF:", combatResultRef.current);
-
     // Logar o estado de mana antes da vitória e informações sobre o inimigo derrotado
     console.log(
       "MANA antes da vitória - Local:",
@@ -886,33 +827,10 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     );
     console.log("Inimigo derrotado:", enemy);
 
-    // ⚠️ CORRIGIR SEQUÊNCIA: Primeiro definir a vitória antes de qualquer outra coisa
-    console.log("🏆 INICIANDO PROCESSO DE VITÓRIA...");
-
-    // MUITO IMPORTANTE: Definir a vitória primeiro e garantir que seja true
-    setVictory(true);
-
-    // Garantia adicional
-    setTimeout(() => {
-      if (!victory) {
-        console.log(
-          "⚠️ ALERTA: Estado de vitória não foi atualizado! Forçando atualização..."
-        );
-        setVictory(true);
-      }
-    }, 50);
-
-    // Registrar explicitamente a vitória antes de continuar
-    console.log("🏆 VITÓRIA CONFIRMADA! Atualizando estado do combate...");
-
-    // Marcar o combate como encerrado após confirmar a vitória
+    // Marcar o combate como encerrado e definir a vitória
     setCombatEnded(true);
+    setVictory(true);
     setActionsDisabled(true);
-
-    console.log("VITÓRIA REGISTRADA - Estado atual:", {
-      combatEnded: true,
-      victory: true,
-    });
 
     // Adicionar mensagem ao log
     addToCombatLog(`Você derrotou ${enemy.name}!`);
@@ -965,6 +883,11 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     addToCombatLog(
       "Vitória! Prepare-se para receber recompensas pela sua conquista."
     );
+
+    // Após 2 segundos, finalizar o combate e passar o resultado para o CombatPage
+    setTimeout(() => {
+      handleFinishCombat();
+    }, 2000);
   };
 
   // Derrota no combate
@@ -977,22 +900,13 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
       return;
     }
 
-    console.log("⚠️⚠️⚠️ DERROTA CONFIRMADA - VIDA ZERADA ⚠️⚠️⚠️");
+    console.log("Processando derrota no combate");
 
-    // EXPLICITAMENTE definir vitória como falso na ref
-    combatResultRef.current = false;
-    console.log("⚠️ DEFINIDO DERROTA NA REF:", combatResultRef.current);
-
-    // Desativar imediatamente todas as ações do jogador
-    setActionsDisabled(true);
-
-    // Marcar o combate como encerrado
     setCombatEnded(true);
     setVictory(false);
+    setActionsDisabled(true);
 
-    // Adicionar mensagens ao log
     addToCombatLog("Você foi derrotado!");
-    addToCombatLog("Sua vida chegou a zero. Voltando à cidade...");
 
     // Determinar a classe do jogador para mensagem personalizada
     let classKey = "warrior"; // Valor padrão
@@ -1031,8 +945,10 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
     // Em caso de derrota, definir a vida para 10% da vida máxima para que o jogador não morra completamente
     // (isso permite que ele continue o jogo após uma derrota)
-    setHealth(Math.max(1, Math.floor(player.maxHealth * 0.1))); // 10% da vida máxima ou pelo menos 1 ponto
-    updateMana(Math.max(1, Math.floor(player.maxMana * 0.1))); // 10% da mana máxima ou pelo menos 1 ponto
+    setTimeout(() => {
+      setHealth(Math.max(1, Math.floor(player.maxHealth * 0.1))); // 10% da vida máxima ou pelo menos 1 ponto
+      updateMana(Math.max(1, Math.floor(player.maxMana * 0.1))); // 10% da mana máxima ou pelo menos 1 ponto
+    }, 500);
   };
 
   // Finalizar o combate
@@ -1045,20 +961,6 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
       // Forçar encerramento
       setCombatEnded(true);
     }
-
-    // 🔴 CRÍTICO: Usar a referência em vez do estado do React
-    // A referência não é afetada pela natureza assíncrona do React
-    const resultadoFinal = combatResultRef.current;
-
-    console.log(
-      "⚠️ ESTADO DE VITÓRIA DA REFERÊNCIA:",
-      resultadoFinal ? "VITÓRIA" : "DERROTA",
-      "Valor bruto da ref:",
-      combatResultRef.current
-    );
-
-    // Log do estado React (para comparação)
-    console.log("Estado React victory:", victory);
 
     // Logar valores finais de mana para diagnóstico
     console.log("VALORES FINAIS - Local vs Global:");
@@ -1075,7 +977,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     syncPlayerState(playerHealth, playerMana);
 
     // Adicionar mensagem final ao log de combate
-    if (resultadoFinal) {
+    if (victory) {
       addToCombatLog(
         "Combate finalizado com sucesso! Processando recompensas..."
       );
@@ -1090,26 +992,11 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
         `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
       );
 
-      // Confirmar o estado final do combate (usando a variável armazenada)
+      // Chamar a função de finalização de combate passando o resultado
       console.log(
-        "ESTADO FINAL DO COMBATE:",
-        resultadoFinal ? "VITÓRIA" : "DERROTA"
+        `Finalizando combate com resultado: ${victory ? "vitória" : "derrota"}`
       );
-
-      // Chamar a função de finalização de combate passando o resultado preservado
-      console.log(
-        `Finalizando combate com resultado: ${
-          resultadoFinal ? "vitória" : "derrota"
-        }`
-      );
-
-      // Passar o resultado preservado para a função de callback
-      console.log(
-        "Resultado final enviado:",
-        resultadoFinal ? "VITÓRIA" : "DERROTA"
-      );
-
-      onCombatEnd(resultadoFinal);
+      onCombatEnd(victory);
     }, 100);
   };
 

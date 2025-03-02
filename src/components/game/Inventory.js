@@ -175,6 +175,8 @@ const Inventory = () => {
     equipItem,
     unequipItem,
     addDialog,
+    heal,
+    recoverMana,
   } = useGame();
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -189,13 +191,21 @@ const Inventory = () => {
   const handleUseItem = (item) => {
     if (item.type === "consumable") {
       if (item.effect === "heal") {
-        // Lógica para usar poção de cura
+        // Lógica para usar poção de cura - chamar a função heal do contexto do jogo
+        console.log(
+          `Usando poção de cura: valor=${item.value}, vida atual=${player.health}`
+        );
+        heal(item.value);
         addDialog(
           "Sistema",
           `Você usou ${item.name} e recuperou ${item.value} pontos de vida.`
         );
       } else if (item.effect === "mana") {
-        // Lógica para usar poção de mana
+        // Lógica para usar poção de mana - chamar a função recoverMana do contexto do jogo
+        console.log(
+          `Usando poção de mana: valor=${item.value}, mana atual=${player.mana}`
+        );
+        recoverMana(item.value);
         addDialog(
           "Sistema",
           `Você usou ${item.name} e recuperou ${item.value} pontos de mana.`

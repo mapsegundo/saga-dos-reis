@@ -4,10 +4,10 @@ import archerVictoryImg from "../arqueiro_vencedor.webp";
 import mageVictoryImg from "../mage_vencedor.webp";
 
 const classImages = {
-  warrior: "https://via.placeholder.com/300x400?text=Warrior", // Guerreiro
-  archer: "https://via.placeholder.com/300x400?text=Archer", // Arqueiro
-  mage: "https://via.placeholder.com/300x400?text=Mage", // Mago
-  default: "https://via.placeholder.com/300x400?text=Default+Class", // Imagem padrão
+  warrior: "/images/classes/warrior.png", // Guerreiro
+  archer: "/images/classes/archer.png", // Arqueiro
+  mage: "/images/classes/mage.png", // Mago
+  default: "/images/classes/default-class.png", // Imagem padrão
 
   // Imagens de vitória
   warrior_victory: warriorVictoryImg,

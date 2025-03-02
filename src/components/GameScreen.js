@@ -490,6 +490,14 @@ const GameScreen = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // DEBUG - Log para verificar os valores do jogador quando o GameScreen é montado
+  useEffect(() => {
+    console.log("GameScreen Montado - Valores do jogador:");
+    console.log(
+      `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+    );
+  }, [player.health, player.mana, player.maxHealth, player.maxMana]);
+
   // Referência para o componente de diálogo
   const dialogRef = useRef(null);
 
@@ -502,13 +510,27 @@ const GameScreen = () => {
 
   // Efeito para carregar o jogo
   useEffect(() => {
+    // DEBUG - Registrar valores no início do carregamento
+    console.log("GameScreen - useEffect de carregamento - Valores INICIAIS:");
+    console.log(
+      `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+    );
+
     // Simular tempo de carregamento
     const timer = setTimeout(() => {
       setLoading(false);
+
+      // DEBUG - Log após o carregamento do jogo
+      console.log(
+        "GameScreen Carregado - Valores do jogador após carregamento:"
+      );
+      console.log(
+        `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
+      );
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [player.health, player.mana, player.maxHealth, player.maxMana]);
 
   // Verificar se o jogo foi iniciado
   if (!gameState.gameStarted) {
