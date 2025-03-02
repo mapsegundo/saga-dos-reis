@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useGame } from "../../context/GameContext";
+import Modal from "../ui/Modal";
 
 const InventoryContainer = styled.div`
   display: flex;
@@ -100,28 +101,6 @@ const ItemButton = styled.button`
   }
 `;
 
-const ItemDetailsModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-`;
-
-const ModalContent = styled.div`
-  background-color: #111;
-  border: 2px solid #8b4513;
-  border-radius: 8px;
-  padding: 20px;
-  width: 90%;
-  max-width: 500px;
-`;
-
 const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -129,6 +108,7 @@ const ModalHeader = styled.div`
   margin-bottom: 20px;
   border-bottom: 1px solid #8b4513;
   padding-bottom: 10px;
+  margin-top: 30px;
 `;
 
 const ModalTitle = styled.h3`
@@ -136,40 +116,47 @@ const ModalTitle = styled.h3`
   margin: 0;
 `;
 
-const CloseButton = styled.button`
-  background-color: transparent;
-  border: none;
-  color: #d4af37;
-  font-size: 1.5rem;
-  cursor: pointer;
-
-  &:hover {
-    color: #fff;
-  }
-`;
-
 const ModalBody = styled.div`
   margin-bottom: 20px;
+  margin-top: 30px;
 `;
 
 const ModalActions = styled.div`
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: 10px;
   border-top: 1px solid #8b4513;
   padding-top: 15px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
 const ActionButton = styled.button`
-  padding: 8px 15px;
+  padding: 10px 15px;
   background-color: ${(props) => (props.primary ? "#8B4513" : "transparent")};
   color: #d4af37;
   border: 1px solid #8b4513;
   border-radius: 4px;
   cursor: pointer;
+  min-width: 120px;
+  font-weight: bold;
+  transition: all 0.2s ease;
 
   &:hover {
     background-color: ${(props) =>
       props.primary ? "#a0522d" : "rgba(139, 69, 19, 0.3)"};
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-bottom: 5px;
   }
 `;
 
@@ -293,15 +280,14 @@ const Inventory = () => {
         </ItemsGrid>
       )}
 
-      {selectedItem && (
-        <ItemDetailsModal>
-          <ModalContent>
-            <ModalHeader>
-              <ModalTitle>{selectedItem.name}</ModalTitle>
-              <CloseButton onClick={closeModal}>&times;</CloseButton>
-            </ModalHeader>
+      <Modal isOpen={selectedItem !== null} onClose={closeModal}>
+        <ModalHeader>
+          <ModalTitle>{selectedItem?.name}</ModalTitle>
+        </ModalHeader>
 
-            <ModalBody>
+        <ModalBody>
+          {selectedItem && (
+            <>
               <ItemType>
                 {selectedItem.type === "weapon" && "Arma"}
                 {selectedItem.type === "armor" && "Armadura"}
@@ -350,36 +336,36 @@ const Inventory = () => {
                 <ItemDetailLabel>Valor:</ItemDetailLabel>
                 <ItemDetailValue>{selectedItem.value} ouro</ItemDetailValue>
               </ItemDetail>
-            </ModalBody>
+            </>
+          )}
+        </ModalBody>
 
-            <ModalActions>
-              {selectedItem.type === "consumable" && (
-                <ActionButton
-                  primary
-                  onClick={() => handleUseItem(selectedItem)}
-                >
-                  Usar
-                </ActionButton>
-              )}
+        <ModalActions>
+          {selectedItem && selectedItem.type === "consumable" && (
+            <ActionButton primary onClick={() => handleUseItem(selectedItem)}>
+              Usar
+            </ActionButton>
+          )}
 
-              {["weapon", "armor", "accessory"].includes(selectedItem.type) && (
-                <ActionButton
-                  primary
-                  onClick={() => handleEquipItem(selectedItem)}
-                >
-                  Equipar
-                </ActionButton>
-              )}
-
-              <ActionButton onClick={() => handleDropItem(selectedItem)}>
-                Descartar
+          {selectedItem &&
+            ["weapon", "armor", "accessory"].includes(selectedItem.type) && (
+              <ActionButton
+                primary
+                onClick={() => handleEquipItem(selectedItem)}
+              >
+                Equipar
               </ActionButton>
+            )}
 
-              <ActionButton onClick={closeModal}>Fechar</ActionButton>
-            </ModalActions>
-          </ModalContent>
-        </ItemDetailsModal>
-      )}
+          {selectedItem && (
+            <ActionButton onClick={() => handleDropItem(selectedItem)}>
+              Descartar
+            </ActionButton>
+          )}
+
+          <ActionButton onClick={closeModal}>Fechar</ActionButton>
+        </ModalActions>
+      </Modal>
     </InventoryContainer>
   );
 };
