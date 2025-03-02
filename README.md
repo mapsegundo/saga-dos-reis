@@ -17,6 +17,17 @@ Esta é a primeira versão pública do jogo, apresentando:
 - Diálogos interativos com personagens do mundo
 - Interface responsiva para diferentes tamanhos de tela
 
+## Atualizações Recentes
+
+**02/03/2025:**
+
+- 🛠️ Corrigido o problema de mensagens duplicadas de experiência
+- 🎮 Melhorado o sistema de combate com verificação de status do jogador
+- 🏆 Aprimorado o sistema de recompensas com probabilidades ajustadas
+- 🖼️ Adicionados novos assets visuais para melhorar a experiência do jogo
+
+Para mais detalhes sobre todas as atualizações, consulte o [CHANGELOG.md](./CHANGELOG.md).
+
 ## Como Jogar
 
 1. Instale as dependências:
