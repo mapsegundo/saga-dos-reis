@@ -289,7 +289,6 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     completeMission,
     addDialog,
     setHealth,
-    updateInventory,
   } = useGame();
 
   // Estado do combate - simplificado
@@ -305,7 +304,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
   const [playerTurn, setPlayerTurn] = useState(true); // Controla de quem é o turno
 
   // Estado de combate guardado em refs para evitar problemas de cleanup
-  const combatResultRef = useRef(null);
+  const combatResultRef = useRef(false);
   const endCallbackCalledRef = useRef(false);
 
   // Referência para o log de combate
@@ -547,208 +546,286 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     );
   };
 
-  // Calcular dano do inimigo
-  const calculateEnemyDamage = () => {
-    // Base do dano do inimigo
-    let damage = enemy.baseDamage || Math.floor(enemy.level * 2 + 5);
-
-    // Variação aleatória (80% a 120% do dano base)
-    const variation = 0.8 + Math.random() * 0.4;
-    damage = Math.floor(damage * variation);
-
-    // Aplicar defesa do jogador se disponível
-    const defense = player.defense || 0;
-    damage = Math.max(1, damage - defense);
-
-    return damage;
-  };
-
-  // Ataque normal do jogador
-  const handlePlayerAttack = () => {
-    // Verificar se o jogador pode atacar
-    if (!playerTurn || actionsDisabled || combatEnded) {
-      console.log("Não é possível atacar agora");
+  // Turno do inimigo
+  const handleEnemyTurn = () => {
+    // Verificar se o combate já terminou
+    if (combatEnded) {
+      console.log("Combate já terminou, ignorando turno do inimigo");
       return;
     }
 
-    console.log("Jogador realiza ataque básico");
-
-    // Calcular dano base
-    const baseDamage = player.damage || 5;
-
-    // Aplicar variação aleatória (80% a 120% do dano base)
-    const variation = 0.8 + Math.random() * 0.4;
-    const damage = Math.floor(baseDamage * variation);
-
-    // Aplicar dano ao inimigo
-    const newEnemyHealth = Math.max(0, enemyHealth - damage);
-    setEnemyHealth(newEnemyHealth);
-
-    // Adicionar ao log de combate
-    addToCombatLog(`Você ataca ${enemy.name} e causa ${damage} de dano!`);
-
-    // Verificar se o inimigo foi derrotado
-    if (newEnemyHealth <= 0) {
-      handleVictory();
+    // Se o inimigo estiver morto, não deve atacar
+    if (enemyHealth <= 0) {
+      console.log("Inimigo está derrotado, ignorando seu turno");
       return;
     }
 
-    // Passar o turno para o inimigo
-    setPlayerTurn(false);
-
-    // Executar o turno do inimigo após um breve delay
-    setTimeout(() => {
-      handleEnemyTurn();
-    }, 1000);
-  };
-
-  // Ataque especial do jogador
-  const handlePlayerSpecial = () => {
-    // Verificar se o jogador pode usar ataque especial
-    if (!playerTurn || actionsDisabled || combatEnded) {
-      console.log("Não é possível usar ataque especial agora");
-      return;
-    }
-
-    // Verificar se o jogador tem mana suficiente
-    const manaCost = 15;
-    if (playerMana < manaCost) {
-      addToCombatLog("Você não tem mana suficiente para usar ataque especial!");
-      return;
-    }
-
-    console.log("Jogador realiza ataque especial");
-
-    // Calcular dano base
-    const baseDamage = player.damage * 2 || 10;
-
-    // Aplicar variação aleatória (90% a 130% do dano base)
-    const variation = 0.9 + Math.random() * 0.4;
-    const damage = Math.floor(baseDamage * variation);
-
-    // Aplicar dano ao inimigo
-    const newEnemyHealth = Math.max(0, enemyHealth - damage);
-    setEnemyHealth(newEnemyHealth);
-
-    // Reduzir mana do jogador
-    const newPlayerMana = playerMana - manaCost;
-    setPlayerMana(newPlayerMana);
-
-    // Sincronizar mana com estado global
-    syncPlayerState(playerHealth, newPlayerMana);
-
-    // Adicionar ao log de combate
-    addToCombatLog(
-      `Você usa um ataque especial em ${enemy.name} e causa ${damage} de dano!`
+    // Calcular dano do inimigo
+    const enemyAttackValue = enemy.attack || enemy.damage || 5;
+    const playerDefenseValue =
+      player.equipment?.armor?.defense ||
+      player.defense ||
+      player.constitution ||
+      5;
+    const enemyDamage = calculateDamage(
+      enemyAttackValue,
+      enemy.level || 1,
+      playerDefenseValue
     );
 
-    // Verificar se o inimigo foi derrotado
-    if (newEnemyHealth <= 0) {
-      handleVictory();
-      return;
-    }
+    // Aplicar dano ao jogador
+    setPlayerHealth((currentHealth) => {
+      const newHealth = Math.max(0, currentHealth - enemyDamage);
 
-    // Passar o turno para o inimigo
-    setPlayerTurn(false);
+      // Sincronizar apenas o valor de saúde, não mexer na mana
+      syncPlayerState(newHealth, undefined);
 
-    // Executar o turno do inimigo após um breve delay
-    setTimeout(() => {
-      handleEnemyTurn();
-    }, 1000);
-  };
-
-  // Usar poção de vida
-  const handleUsePotion = () => {
-    // Verificar se o jogador pode usar poção
-    if (!playerTurn || actionsDisabled || combatEnded) {
-      console.log("Não é possível usar poção agora");
-      return;
-    }
-
-    // Verificar se o jogador tem poções de vida
-    if (
-      !player.inventory.healthPotions ||
-      player.inventory.healthPotions <= 0
-    ) {
-      addToCombatLog("Você não tem poções de vida!");
-      return;
-    }
-
-    // Calcular cura (30% da vida máxima)
-    const healAmount = Math.floor(player.maxHealth * 0.3);
-    const newPlayerHealth = Math.min(
-      player.maxHealth,
-      playerHealth + healAmount
-    );
-
-    // Atualizar vida do jogador
-    setPlayerHealth(newPlayerHealth);
-
-    // Reduzir quantidade de poções
-    updateInventory({
-      ...player.inventory,
-      healthPotions: player.inventory.healthPotions - 1,
+      return newHealth;
     });
 
-    // Sincronizar com estado global
-    syncPlayerState(newPlayerHealth, playerMana);
+    // Adicionar ao log de combate
+    addToCombatLog(
+      `${enemy.name} atacou você causando ${enemyDamage} de dano!`
+    );
+
+    // Verificar se o jogador foi derrotado após atualizar a saúde
+    setTimeout(() => {
+      if (playerHealth <= 0) {
+        handleDefeat();
+        return;
+      }
+
+      // Devolver o turno para o jogador
+      setPlayerTurn(true);
+
+      // Reativar ações do jogador
+      setActionsDisabled(false);
+    }, 50);
+  };
+
+  // Ataque do jogador
+  const handlePlayerAttack = () => {
+    // Verificar se o jogador pode atacar
+    if (!playerTurn || actionsDisabled || combatEnded || playerHealth <= 0) {
+      console.log("Não é possível atacar agora");
+      if (playerHealth <= 0 && !combatEnded) {
+        handleDefeat();
+      }
+      return;
+    }
+
+    // Desativar ações do jogador
+    setActionsDisabled(true);
+
+    // Marcar que é o turno do inimigo
+    setPlayerTurn(false);
+
+    // Calcular dano do jogador
+    const playerAttackValue =
+      player.equipment?.weapon?.damage ||
+      player.attack ||
+      player.strength ||
+      10;
+    const enemyDefenseValue = enemy.defense || 0;
+    const playerDamage = calculateDamage(
+      playerAttackValue,
+      player.level,
+      enemyDefenseValue
+    );
+
+    // Atualizar vida do inimigo
+    const newEnemyHealth = Math.max(0, enemyHealth - playerDamage);
+    setEnemyHealth(newEnemyHealth);
 
     // Adicionar ao log de combate
     addToCombatLog(
-      `Você usa uma poção de vida e recupera ${healAmount} pontos de vida!`
+      `Você atacou ${enemy.name} causando ${playerDamage} de dano!`
     );
 
-    // Passar o turno para o inimigo
+    // Verificar se o inimigo foi derrotado
+    if (newEnemyHealth <= 0) {
+      handleVictory();
+      return;
+    }
+
+    // Ataque do inimigo após um pequeno delay
+    setTimeout(handleEnemyTurn, 1000);
+  };
+
+  // Habilidade especial do jogador
+  const handlePlayerSpecial = () => {
+    // Verificar se o jogador pode usar habilidade especial
+    if (
+      !playerTurn ||
+      combatEnded ||
+      actionsDisabled ||
+      playerHealth <= 0 ||
+      playerMana < 10
+    ) {
+      console.log("Não é possível usar habilidade especial agora");
+      if (playerHealth <= 0 && !combatEnded) {
+        handleDefeat();
+      }
+      return;
+    }
+
+    // Desativar ações do jogador
+    setActionsDisabled(true);
+
+    // Marcar que é o turno do inimigo
     setPlayerTurn(false);
 
-    // Executar o turno do inimigo após um breve delay
-    setTimeout(() => {
-      handleEnemyTurn();
-    }, 1000);
+    // Consumir mana
+    const manaCost = 10;
+
+    // Usar a forma funcional do setState para garantir que temos o valor mais recente
+    setPlayerMana((currentMana) => {
+      const newMana = Math.max(0, currentMana - manaCost);
+
+      // Registrar no console para depuração
+      console.log(
+        `Mana antes de usar habilidade: ${currentMana}, Após uso: ${newMana}`
+      );
+
+      // Sincronizar com estado global
+      syncPlayerState(undefined, newMana);
+
+      return newMana;
+    });
+
+    // Calcular dano especial
+    const playerAttackValue =
+      player.equipment?.weapon?.damage ||
+      player.attack ||
+      player.strength ||
+      10;
+    const enemyDefenseValue = enemy.defense || 0;
+    const specialDamage = Math.floor(
+      calculateDamage(playerAttackValue, player.level, enemyDefenseValue) * 1.5
+    );
+
+    // Atualizar vida do inimigo
+    const newEnemyHealth = Math.max(0, enemyHealth - specialDamage);
+    setEnemyHealth(newEnemyHealth);
+
+    // Adicionar ao log de combate
+    addToCombatLog(
+      `Você usou uma habilidade especial em ${enemy.name} causando ${specialDamage} de dano!`
+    );
+
+    // Verificar se o inimigo foi derrotado
+    if (newEnemyHealth <= 0) {
+      handleVictory();
+      return;
+    }
+
+    // Ataque do inimigo após um pequeno delay
+    setTimeout(handleEnemyTurn, 1000);
+  };
+
+  // Usar poção
+  const handleUsePotion = () => {
+    // Verificar se o jogador pode usar poção
+    if (!playerTurn || combatEnded || actionsDisabled || playerHealth <= 0) {
+      console.log("Não é possível usar poção agora");
+      if (playerHealth <= 0 && !combatEnded) {
+        handleDefeat();
+      }
+      return;
+    }
+
+    // Verificar se o jogador tem poções
+    const healthPotion = player.inventory.find(
+      (item) => item && item.id === "health_potion"
+    );
+
+    if (!healthPotion || healthPotion.amount <= 0) {
+      addToCombatLog("Você não tem poções de cura!");
+      return;
+    }
+
+    // Desativar ações do jogador
+    setActionsDisabled(true);
+
+    // Marcar que é o turno do inimigo
+    setPlayerTurn(false);
+
+    // Usar poção - Ajustamos a quantidade de cura para 25 para equilibrar mais o jogo
+    removeFromInventory("health_potion", 1);
+    const healAmount = 25;
+
+    // Usamos a forma funcional do setState para garantir que temos o valor mais recente
+    setPlayerHealth((currentHealth) => {
+      const newHealth = Math.min(player.maxHealth, currentHealth + healAmount);
+      // Registrar no console para depuração
+      console.log(
+        `Saúde antes da cura: ${currentHealth}, Após cura: ${newHealth}`
+      );
+
+      // Sincronizar com estado global
+      syncPlayerState(newHealth, undefined);
+
+      return newHealth;
+    });
+
+    // Adicionar ao log de combate
+    addToCombatLog(`Você usou uma poção e recuperou ${healAmount} de vida!`);
+
+    // Ataque do inimigo após um pequeno delay - passa o turno para o inimigo
+    setTimeout(handleEnemyTurn, 1000);
   };
 
   // Usar poção de mana
   const handleUseManaPotion = () => {
-    // Verificar se o jogador pode usar poção
-    if (!playerTurn || actionsDisabled || combatEnded) {
-      console.log("Não é possível usar poção agora");
+    // Verificar se o jogador pode usar poção de mana
+    if (!playerTurn || combatEnded || actionsDisabled || playerHealth <= 0) {
+      console.log("Não é possível usar poção de mana agora");
+      if (playerHealth <= 0 && !combatEnded) {
+        handleDefeat();
+      }
       return;
     }
 
     // Verificar se o jogador tem poções de mana
-    if (!player.inventory.manaPotions || player.inventory.manaPotions <= 0) {
+    const manaPotion = player.inventory.find(
+      (item) => item && item.id === "mana_potion"
+    );
+
+    if (!manaPotion || manaPotion.amount <= 0) {
       addToCombatLog("Você não tem poções de mana!");
       return;
     }
 
-    // Calcular regeneração de mana (30% da mana máxima)
-    const manaAmount = Math.floor(player.maxMana * 0.3);
-    const newPlayerMana = Math.min(player.maxMana, playerMana + manaAmount);
+    // Desativar ações do jogador
+    setActionsDisabled(true);
 
-    // Atualizar mana do jogador
-    setPlayerMana(newPlayerMana);
-
-    // Reduzir quantidade de poções
-    updateInventory({
-      ...player.inventory,
-      manaPotions: player.inventory.manaPotions - 1,
-    });
-
-    // Sincronizar com estado global
-    syncPlayerState(playerHealth, newPlayerMana);
-
-    // Adicionar ao log de combate
-    addToCombatLog(
-      `Você usa uma poção de mana e recupera ${manaAmount} pontos de mana!`
-    );
-
-    // Passar o turno para o inimigo
+    // Marcar que é o turno do inimigo
     setPlayerTurn(false);
 
-    // Executar o turno do inimigo após um breve delay
-    setTimeout(() => {
-      handleEnemyTurn();
-    }, 1000);
+    // Usar poção de mana
+    removeFromInventory("mana_potion", 1);
+    const manaAmount = 30;
+
+    // Usamos a forma funcional do setState para garantir que temos o valor mais recente
+    setPlayerMana((currentMana) => {
+      const newMana = Math.min(player.maxMana, currentMana + manaAmount);
+
+      // Registrar no console para depuração
+      console.log(
+        `Mana antes da poção: ${currentMana}, Após poção: ${newMana} (máximo: ${player.maxMana})`
+      );
+
+      // Sincronizar com estado global
+      syncPlayerState(undefined, newMana);
+
+      return newMana;
+    });
+
+    // Adicionar ao log de combate
+    addToCombatLog(`Você usou uma poção e recuperou ${manaAmount} de mana!`);
+
+    // Ataque do inimigo após um pequeno delay - passa o turno para o inimigo
+    setTimeout(handleEnemyTurn, 1000);
   };
 
   // Função para obter a imagem de vitória baseada na classe do jogador
@@ -842,83 +919,36 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
     }, 1500);
   };
 
-  // Função central para finalizar o combate
+  // Função para encerrar o combate de forma consistente
   const finalizeCombat = (isVictory) => {
-    // Evitar múltiplas chamadas de finalização
+    // Evitar múltiplas chamadas
     if (endCallbackCalledRef.current) {
-      console.log("Callback de finalização já chamado, ignorando");
+      console.log("finalizeCombat: Callback já foi chamado, ignorando");
       return;
     }
 
-    console.log(
-      `Finalizando combate - Resultado: ${isVictory ? "Vitória" : "Derrota"}`
-    );
-
-    // Marcar que o callback foi chamado
+    // Marcar que estamos chamando o callback
     endCallbackCalledRef.current = true;
 
-    // Garantir que o resultado está definido corretamente
+    // Definir resultado persistente
     combatResultRef.current = isVictory;
 
-    // Garantir que o estado de combate está atualizado
-    setCombatEnded(true);
-    setVictory(isVictory);
-    setActionsDisabled(true);
+    // Logar o resultado final do combate
+    console.log(
+      `⚠️ FINALIZANDO COMBATE - Resultado: ${isVictory ? "VITÓRIA" : "DERROTA"}`
+    );
+    console.log(
+      `Vida final: ${playerHealth}/${player.maxHealth}, Mana final: ${playerMana}/${player.maxMana}`
+    );
 
-    // Sincronizar o estado final do jogador antes de chamar o callback
+    // Atualizar o estado global pela última vez antes de chamar o callback
     syncPlayerState(playerHealth, playerMana);
 
-    // Registrar estado final no console para depuração
-    console.log("Estado final do combate:", {
-      resultado: isVictory ? "Vitória" : "Derrota",
-      vidaJogador: playerHealth,
-      manaJogador: playerMana,
-      vidaInimigo: enemyHealth,
-    });
-
-    // Chamar o callback com o resultado do combate
-    if (typeof onCombatEnd === "function") {
-      onCombatEnd(isVictory, enemy);
-    } else {
-      console.error("onCombatEnd não é uma função válida");
-    }
-  };
-
-  // Turno do inimigo
-  const handleEnemyTurn = () => {
-    // Verificar se o combate já terminou
-    if (combatEnded) {
-      console.log("Combate já terminou, ignorando turno do inimigo");
-      return;
-    }
-
-    // Se o inimigo estiver morto, não deve atacar
-    if (enemyHealth <= 0) {
-      console.log("Inimigo está derrotado, ignorando seu turno");
-      return;
-    }
-
-    // Calcular dano do inimigo
-    const enemyDamage = calculateEnemyDamage();
-
-    // Aplicar dano ao jogador
-    const newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
-    setPlayerHealth(newPlayerHealth);
-
-    // Sincronizar com o estado do jogador
-    syncPlayerState(newPlayerHealth, playerMana);
-
-    // Adicionar ao log de combate
-    addToCombatLog(`${enemy.name} ataca e causa ${enemyDamage} de dano!`);
-
-    // Verificar se o jogador foi derrotado
-    if (newPlayerHealth <= 0) {
-      handleDefeat();
-      return;
-    }
-
-    // Permitir novas ações do jogador
-    setPlayerTurn(true);
+    // IMPORTANTE: Usar setTimeout para garantir que atualizações de estado sejam processadas
+    setTimeout(() => {
+      // Chamar o callback, passando o resultado
+      onCombatEnd(isVictory);
+    }, 100);
   };
 
   return (
@@ -961,9 +991,9 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
           <ContinueButton
             onClick={() => finalizeCombat(victory)}
-            disabled={actionsDisabled && !combatEnded}
+            disabled={false}
           >
-            Continuar
+            Continuar Aventura
           </ContinueButton>
         </div>
       ) : (
