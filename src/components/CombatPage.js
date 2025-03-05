@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useGame } from "../context/GameContext";
 import CombatScreen from "./game/CombatScreen";
@@ -79,38 +79,35 @@ const ReturnButton = styled.button`
 
 const CombatPage = () => {
   const navigate = useNavigate();
+  const { id: enemyId } = useParams();
   const {
     gameState,
+    setGameState,
     player,
-    takeDamage,
-    heal,
     updateMana,
+    setHealth,
     gainExperience,
     updateGold,
-    removeFromInventory,
     addToInventory,
     completeMission,
-    setGameState,
-    enemies,
+    endGame,
   } = useGame();
 
-  // Estado local para controlar se o combate já foi finalizado
-  const [combatFinished, setCombatFinished] = useState(false);
-
-  // Estado para controlar se houve erro ao carregar o inimigo
-  const [loadError, setLoadError] = useState(false);
-
-  // Estado para armazenar o inimigo processado
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentEnemy, setCurrentEnemy] = useState(null);
   const [processedEnemy, setProcessedEnemy] = useState(null);
 
+  // Usar useRef para controlar o estado de conclusão do combate
+  const combatFinished = useRef(false);
+
   // Gerar um ID único para este combate
-  const [combatId] = useState(`${Date.now()}`);
+  const combatId = useRef(
+    `combat_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  ).current;
 
   // Referência para controlar se o componente está montado
   const isMounted = useRef(true);
-
-  // Verificar se há um inimigo no estado do jogo
-  const currentEnemy = gameState.currentEnemy;
 
   // Efeito para limpar a referência quando o componente for desmontado
   useEffect(() => {
@@ -132,7 +129,7 @@ const CombatPage = () => {
       console.log(
         "CombatPage - Nenhum inimigo encontrado, redirecionando para o jogo"
       );
-      setLoadError(true);
+      setError(true);
       return;
     }
 
@@ -147,7 +144,7 @@ const CombatPage = () => {
 
         if (!enemyObject) {
           console.error(`Inimigo não encontrado: ${currentEnemy}`);
-          setLoadError(true);
+          setError(true);
           return;
         }
 
@@ -183,7 +180,7 @@ const CombatPage = () => {
             enemyObject
           );
         } else {
-          setLoadError(true);
+          setError(true);
           return;
         }
       }
@@ -218,7 +215,7 @@ const CombatPage = () => {
     } catch (error) {
       console.error("Erro ao processar inimigo:", error);
       if (isMounted.current) {
-        setLoadError(true);
+        setError(true);
       }
     }
   }, [currentEnemy, setGameState]);
@@ -226,7 +223,7 @@ const CombatPage = () => {
   // Efeito para limpar o inimigo quando o componente for desmontado
   useEffect(() => {
     return () => {
-      if (!combatFinished && currentEnemy) {
+      if (!combatFinished.current && currentEnemy) {
         console.log("Componente CombatPage desmontado sem finalizar o combate");
         // Limpar o inimigo atual para evitar problemas
         setGameState((prev) => ({
@@ -242,28 +239,16 @@ const CombatPage = () => {
     // Forçar o tipo para boolean para evitar problemas
     const resultadoFinal = victory === true;
 
-    // DEBUG - Log para verificar os valores do jogador antes de finalizar o combate
-    console.log(
-      "CombatPage handleCombatEnd - Valores do jogador antes de finalizar:"
-    );
-    console.log(
-      `Vida: ${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
-    );
-    console.log(
-      "⚠️ Resultado recebido do CombatScreen:",
-      resultadoFinal ? "VITÓRIA" : "DERROTA"
-    );
-
-    // Evitar múltiplas chamadas
-    if (combatFinished) {
+    // Evitar múltiplas chamadas usando useRef em vez de estado
+    if (combatFinished.current) {
       console.log("Combate já foi finalizado, redirecionando para o jogo");
       // Mesmo que o combate já tenha sido finalizado, ainda precisamos redirecionar
       navigate("/game");
       return;
     }
 
-    // Marcar o combate como finalizado
-    setCombatFinished(true);
+    // Marcar o combate como finalizado imediatamente
+    combatFinished.current = true;
 
     console.log(
       "Combate finalizado com resultado:",
@@ -271,27 +256,11 @@ const CombatPage = () => {
       "ID do combate:",
       combatId
     );
-    console.log(
-      "VALORES DE MANA NO FINAL DO COMBATE (CombatPage):",
-      `${player.mana}/${player.maxMana}`
-    );
 
     if (resultadoFinal && processedEnemy) {
       console.log(
         "⚠️ PROCESSANDO VITÓRIA - Garantindo que não ocorra game over"
       );
-      // A vida e a mana do jogador já foram atualizadas pelo CombatScreen
-      // Não precisamos restaurar ou modificar nada aqui
-      // Apenas processamos a recompensa normalmente
-
-      console.log("Processando vitória contra:", processedEnemy.id);
-      console.log(
-        "Vitória - Vida atual do jogador:",
-        `${player.health}/${player.maxHealth}, Mana: ${player.mana}/${player.maxMana}`
-      );
-
-      // DEBUG - Verificar a estrutura do inimigo e suas recompensas
-      console.log("Estrutura completa do inimigo:", processedEnemy);
 
       // =========== SISTEMA DE RECOMPENSAS AJUSTADO ===========
 
@@ -304,7 +273,6 @@ const CombatPage = () => {
 
       console.log("Concedendo experiência:", expReward);
       // A função gainExperience já adiciona a mensagem de experiência ao diálogo
-      // Não precisamos adicionar uma segunda mensagem aqui
       gainExperience(expReward);
 
       // 2. OURO - 70% de chance de ganhar ouro
@@ -331,9 +299,13 @@ const CombatPage = () => {
         }));
       }
 
-      // 3. POÇÕES - 30% de chance de ganhar poção de cura, 20% de chance de ganhar poção de mana
-      // Chance de poção de cura
-      if (Math.random() < 0.3) {
+      // 3. POÇÕES - Usando sistema de chance baseado no nível do inimigo
+      // Chance de poção de cura (30% base + 5% por nível do inimigo, máximo 50%)
+      const healthPotionChance = Math.min(
+        0.3 + (processedEnemy.level || 1) * 0.05,
+        0.5
+      );
+      if (Math.random() < healthPotionChance) {
         console.log("Concedendo poção de cura");
         addToInventory("health_potion", 1);
 
@@ -349,8 +321,12 @@ const CombatPage = () => {
         }));
       }
 
-      // Chance de poção de mana
-      if (Math.random() < 0.2) {
+      // Chance de poção de mana (20% base + 3% por nível do inimigo, máximo 35%)
+      const manaPotionChance = Math.min(
+        0.2 + (processedEnemy.level || 1) * 0.03,
+        0.35
+      );
+      if (Math.random() < manaPotionChance) {
         console.log("Concedendo poção de mana");
         addToInventory("mana_potion", 1);
 
@@ -533,7 +509,7 @@ const CombatPage = () => {
   };
 
   // Se houver erro ao carregar o inimigo
-  if (loadError) {
+  if (error) {
     return (
       <CombatPageContainer>
         <CombatWrapper>
