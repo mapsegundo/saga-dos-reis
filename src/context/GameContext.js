@@ -782,9 +782,63 @@ export const GameProvider = ({ children }) => {
           console.log(
             "🏆 Meta de 5 bandidos atingida! Missão pronta para ser concluída."
           );
+
+          // Fazer Garrick aparecer nos arredores da vila
+          // Correto: Tratando locations como um objeto, não como array
+          if (prev.locations && prev.locations.village_outskirts) {
+            // Criar uma cópia da localização para modificar
+            const updatedLocation = {
+              ...prev.locations.village_outskirts,
+            };
+
+            // Adicionar Garrick à lista de inimigos se ele ainda não estiver lá
+            const hasGarrick = updatedLocation.enemies?.some((enemy) =>
+              typeof enemy === "string"
+                ? enemy === "garrick"
+                : enemy.id === "garrick"
+            );
+
+            if (!hasGarrick) {
+              // Inicializar array de inimigos se não existir
+              if (!updatedLocation.enemies) {
+                updatedLocation.enemies = [];
+              }
+
+              // Adicionar Garrick
+              updatedLocation.enemies.push("garrick");
+
+              // Adicionar mensagem informando o jogador
+              setTimeout(() => {
+                addDialog(
+                  "Narrador",
+                  "Após derrotar vários bandidos, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
+                );
+
+                setTimeout(() => {
+                  addDialog(
+                    "Sistema",
+                    "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
+                  );
+                }, 1000);
+              }, 500);
+
+              // Retornar estado atualizado com a localização modificada
+              return {
+                ...prev,
+                questProgress: {
+                  ...prev.questProgress,
+                  mission1_2: updatedProgress,
+                },
+                locations: {
+                  ...prev.locations,
+                  village_outskirts: updatedLocation,
+                },
+              };
+            }
+          }
         }
 
-        // Retornar estado atualizado
+        // Retornar estado atualizado sem modificar localizações
         return {
           ...prev,
           questProgress: {

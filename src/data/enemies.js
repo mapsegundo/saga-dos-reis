@@ -213,6 +213,67 @@ export const enemies = [
     sprite: "skeleton_mage",
     emoji: "🧙",
   },
+  {
+    id: "garrick",
+    name: "Garrick, Líder dos Bandidos 👹",
+    description:
+      "O líder dos bandidos que atacam a Vila de Ravenwood. Alto, forte e implacável, carrega uma espada de duas mãos.",
+    level: 4,
+    health: 150,
+    maxHealth: 150,
+    damage: 15,
+    defense: 8,
+    experience: 100,
+    gold: 50,
+    items: [
+      {
+        id: "great_sword",
+        name: "Espada Grande ⚔️",
+        type: "weapon",
+        damage: 15,
+        value: 40,
+        chance: 0.4,
+        description:
+          "Uma espada pesada de duas mãos com excelente poder de ataque.",
+      },
+      {
+        id: "health_potion",
+        name: "Poção de Cura 🧪",
+        type: "consumable",
+        effect: "heal",
+        value: 30,
+        amount: 40,
+        chance: 0.8,
+      },
+    ],
+    abilities: [
+      {
+        id: "cleave",
+        name: "Golpe Devastador",
+        damage: 25,
+        description: "Um golpe poderoso que pode atingir vários alvos.",
+        cooldown: 4,
+      },
+      {
+        id: "intimidate",
+        name: "Intimidar",
+        description: "Aterroriza o alvo, reduzindo sua capacidade de ataque.",
+        effect: "reduce_attack",
+        amount: 5,
+        cooldown: 5,
+      },
+      {
+        id: "battle_cry",
+        name: "Grito de Guerra",
+        description:
+          "Um grito que aumenta seu poder de ataque temporariamente.",
+        effect: "increase_attack",
+        amount: 10,
+        cooldown: 6,
+      },
+    ],
+    emoji: "👹",
+  },
 ];
 
 // Função para obter um inimigo pelo ID

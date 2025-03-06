@@ -7,6 +7,7 @@ const enemyImages = {
   skeleton: "/images/enemies/skeleton.png", // Esqueleto
 
   // Chefes
+  garrick: "/images/enemies/garrick.webp", // Garrick, Líder dos Bandidos
   bandit_leader: "/images/enemies/bandit-leader.png", // Líder dos Bandidos
   dark_knight: "/images/enemies/dark-knight.png", // Cavaleiro Negro
   necromancer: "/images/enemies/necromancer.png", // Necromante

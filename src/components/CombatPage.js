@@ -386,6 +386,56 @@ const CombatPage = () => {
         recordEnemyDefeat(processedEnemy.id);
       }
 
+      // Verificar se o inimigo derrotado é Garrick, o líder dos bandidos
+      if (processedEnemy.id === "garrick") {
+        console.log("🏆 Garrick, o líder dos bandidos, foi derrotado!");
+
+        // Verificar se a missão está ativa
+        const banditMission = gameState.questLog.find(
+          (q) => q.id === "mission1_2" && !q.completed
+        );
+
+        if (banditMission) {
+          console.log("🎮 Completando missão de defesa da vila!");
+
+          // Completar a missão
+          completeMission("mission1_2");
+
+          // Adicionar diálogo de vitória
+          setGameState((prev) => ({
+            ...prev,
+            dialogHistory: [
+              ...prev.dialogHistory,
+              {
+                speaker: "Narrador",
+                text: "Com um último golpe, você derruba Garrick. O líder dos bandidos cai ao chão, derrotado. A ameaça sobre a Vila de Ravenwood foi eliminada, e os moradores podem finalmente respirar aliviados.",
+              },
+              {
+                speaker: "Sistema",
+                text: "Missão 'Defesa da Vila' completada! Você derrotou Garrick e salvou a Vila de Ravenwood dos bandidos.",
+              },
+            ],
+          }));
+
+          // Dar uma recompensa adicional pela vitória sobre Garrick
+          gainExperience(200);
+          updateGold(100);
+
+          setTimeout(() => {
+            setGameState((prev) => ({
+              ...prev,
+              dialogHistory: [
+                ...prev.dialogHistory,
+                {
+                  speaker: "Sistema",
+                  text: "Você ganhou 200 de experiência e 100 moedas de ouro adicionais por derrotar Garrick!",
+                },
+              ],
+            }));
+          }, 1000);
+        }
+      }
+
       // Remover o inimigo derrotado da localização atual
       const currentLocation = gameState.currentLocation;
 
