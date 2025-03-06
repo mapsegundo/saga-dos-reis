@@ -83,67 +83,9 @@ const ActionMenu = ({ location, onStartCombat }) => {
 
   // Efeito para verificar e adicionar Garrick quando os bandidos forem derrotados
   useEffect(() => {
-    if (!locationValid) return; // Não prosseguir se location não for válido
-
-    if (
-      isVillageOutskirts &&
-      gameState.questProgress?.mission1_2 &&
-      gameState.questProgress.mission1_2.totalDefeated >=
-        gameState.questProgress.mission1_2.requiredDefeats
-    ) {
-      console.log(
-        "🔍 Verificando se Garrick deve aparecer nos arredores da vila..."
-      );
-
-      // Verificar se Garrick já está na lista de inimigos da localização
-      const hasGarrick = location.enemies?.some((enemy) =>
-        typeof enemy === "string" ? enemy === "garrick" : enemy.id === "garrick"
-      );
-
-      if (!hasGarrick) {
-        console.log("🔄 Efeito: Adicionando Garrick aos arredores da vila!");
-
-        // NÃO MODIFICAR currentLocation - Em vez disso, vamos usar updatedEnemies
-        // para rastrear atualizações de inimigos para cada localização
-        setGameState((prev) => {
-          return {
-            ...prev,
-            updatedEnemies: {
-              ...prev.updatedEnemies,
-              village_outskirts: [...(location.enemies || []), "garrick"],
-            },
-          };
-        });
-
-        // Mostrar mensagem apenas se for a primeira vez
-        if (!localStorage.getItem("garrick_appeared")) {
-          localStorage.setItem("garrick_appeared", "true");
-
-          // Adicionar mensagem após um pequeno atraso
-          setTimeout(() => {
-            addDialog(
-              "Narrador",
-              "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece diante de você. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
-            );
-
-            setTimeout(() => {
-              addDialog(
-                "Sistema",
-                "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
-              );
-            }, 1000);
-          }, 500);
-        }
-      }
-    }
-  }, [
-    locationValid,
-    isVillageOutskirts,
-    location,
-    gameState.questProgress?.mission1_2?.totalDefeated,
-    addDialog,
-    setGameState,
-  ]);
+    // Não precisamos mais fazer nada aqui, pois a lógica foi simplificada no renderEnemyButtons
+    // O código antigo estava causando problemas com o estado do jogo
+  }, []);
 
   // Se temos erro de localização, mostrar mensagem de erro
   if (locationError) {
@@ -560,8 +502,29 @@ const ActionMenu = ({ location, onStartCombat }) => {
       typeof enemyId === "object" ? enemyId.id : enemyId
     );
 
-    // Chamar a função onStartCombat passando o ID do inimigo
-    onStartCombat(enemyId);
+    // Identificar especificamente se estamos iniciando combate com Garrick
+    const isGarrick =
+      typeof enemyId === "object"
+        ? enemyId.id === "garrick"
+        : enemyId === "garrick";
+
+    if (isGarrick) {
+      console.log("👹 Iniciando combate com Garrick, líder dos bandidos!");
+
+      // Mensagem especial para o início do combate com Garrick
+      addDialog(
+        "Garrick",
+        "Então você é o tolo que está derrotando meus homens? Vamos ver se consegue sobreviver ao meu ataque!"
+      );
+
+      setTimeout(() => {
+        // Chamar a função onStartCombat passando o ID do inimigo após a mensagem
+        onStartCombat(enemyId);
+      }, 1500);
+    } else {
+      // Para outros inimigos, iniciar o combate normalmente
+      onStartCombat(enemyId);
+    }
   };
 
   // Ações de coleta
@@ -616,7 +579,11 @@ const ActionMenu = ({ location, onStartCombat }) => {
 
   // Renderizar botões de inimigo
   const renderEnemyButtons = () => {
-    if (!location || !location.enemies || location.enemies.length === 0) {
+    // Verificação de segurança - se location for null/undefined ou location.enemies não existir, retornar null
+    if (!location || !Array.isArray(location.enemies)) {
+      console.log(
+        "⚠️ location ou location.enemies inválido em renderEnemyButtons"
+      );
       return null;
     }
 
@@ -748,30 +715,35 @@ const ActionMenu = ({ location, onStartCombat }) => {
             "👹 Garrick não encontrado! Adicionando manualmente no ActionMenu!"
           );
 
+          // SOLUÇÃO SIMPLIFICADA: Adicionamos diretamente o botão de combate para Garrick
           buttons.push(
             <button
               key="garrick"
               onClick={() => handleCombat(garrickDetails)}
-              className="bg-[#8b4513]/90 text-[#d4af37] border-2 border-[#d4af37] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513] hover:-translate-y-0.5 animate-pulse"
+              className="bg-[#d4af37] text-[#8b4513] border-2 border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left font-bold hover:bg-[#d4af37]/80 hover:-translate-y-0.5 animate-pulse"
             >
-              Combater {garrickDetails.name} {garrickDetails.emoji || ""}
+              ⚔️ Combater {garrickDetails.name} {garrickDetails.emoji || ""}
             </button>
           );
 
-          // Se Garrick não estiver na lista de inimigos, adicioná-lo manualmente à lista updatedEnemies
-          if (location && !hasGarrick) {
-            console.log(
-              "🔄 Atualizando lista de inimigos para incluir Garrick"
-            );
-            setGameState((prev) => {
-              return {
-                ...prev,
-                updatedEnemies: {
-                  ...prev.updatedEnemies,
-                  village_outskirts: [...(location.enemies || []), "garrick"],
-                },
-              };
-            });
+          // Se é a primeira vez que Garrick aparece, exibir uma mensagem dramática
+          if (!localStorage.getItem("garrick_appeared")) {
+            localStorage.setItem("garrick_appeared", "true");
+
+            // Adicionar mensagem após um pequeno atraso
+            setTimeout(() => {
+              addDialog(
+                "Narrador",
+                "Após derrotar o último bandido, você ouve uma risada maligna ecoando. Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
+              );
+
+              setTimeout(() => {
+                addDialog(
+                  "Sistema",
+                  "Garrick, o líder dos bandidos, apareceu! Derrote-o para completar a missão."
+                );
+              }, 1000);
+            }, 500);
           }
         }
       }

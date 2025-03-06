@@ -11,9 +11,7 @@ export const locations = [
     npcs: ["mestre_thorne", "comerciante_gorn", "historiador_anzu"],
     enemies: [],
     items: [],
-    connectedLocations: [
-      { id: "village_outskirts", name: "Arredores da Vila 🌄" },
-    ],
+    connectedLocations: [],
   },
   {
     id: "village_tavern",
