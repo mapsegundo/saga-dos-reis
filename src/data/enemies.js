@@ -276,6 +276,57 @@ export const enemies = [
   },
 ];
 
+// Verificar se Garrick está definido e, se não estiver, adicioná-lo
+const garrickExists = enemies.some((enemy) => enemy.id === "garrick");
+
+if (!garrickExists) {
+  console.log("Adicionando Garrick à lista de inimigos");
+  enemies.push({
+    id: "garrick",
+    name: "Garrick, o Líder Bandido",
+    description:
+      "Um homem grande e forte, com cicatrizes no rosto e olhos cruéis. Ele lidera os bandidos que têm aterrorizado a região.",
+    level: 5,
+    health: 150,
+    damage: 15,
+    defense: 8,
+    emoji: "👹",
+    skills: [
+      {
+        name: "Golpe Brutal",
+        damage: 20,
+        description: "Um golpe poderoso que causa dano extra",
+        manaCost: 0,
+        cooldown: 2,
+      },
+      {
+        name: "Grito de Guerra",
+        damage: 0,
+        description: "Aumenta o dano dos próximos ataques",
+        manaCost: 0,
+        cooldown: 3,
+        effect: {
+          type: "buff",
+          stat: "damage",
+          value: 5,
+          duration: 3,
+        },
+      },
+    ],
+    rewards: {
+      exp: 200,
+      gold: 100,
+      items: ["sword_of_garrick", "health_potion"],
+    },
+    drops: [
+      { id: "health_potion", chance: 1.0 }, // 100% chance de dropar poção de vida
+      { id: "mana_potion", chance: 0.5 }, // 50% chance de dropar poção de mana
+      { id: "garrick_pendant", chance: 1.0 }, // 100% chance de dropar o amuleto de Garrick
+    ],
+    isBoss: true,
+  });
+}
+
 // Função para obter um inimigo pelo ID
 export const getEnemyById = (id) => {
   return enemies.find((enemy) => enemy.id === id);

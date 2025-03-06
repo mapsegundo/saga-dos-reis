@@ -772,11 +772,50 @@ const GameScreen = () => {
     );
   }
 
-  // Obter imagem de fundo da localização atual
-  const locationId = currentLocation.id;
-  const backgroundImage = kingdomImages[locationId] || kingdomImages.default;
-
+  // Obter a imagem de fundo para a localização atual
+  const locationId = currentLocation?.id || "default";
   console.log(`Carregando imagem para localização: ${locationId}`);
+
+  // Verificar se Garrick deve aparecer nos arredores da vila
+  // Se estamos nos arredores da vila e todos os bandidos foram derrotados, usar a imagem de Garrick
+  let shouldShowGarrick = false;
+
+  if (
+    locationId === "village_outskirts" &&
+    gameState.questProgress?.mission1_2
+  ) {
+    const banditProgress = gameState.questProgress.mission1_2;
+    shouldShowGarrick =
+      banditProgress.totalDefeated >= banditProgress.requiredDefeats;
+    console.log(
+      `Verificando se devemos mostrar Garrick: ${shouldShowGarrick} (totalDefeated: ${banditProgress.totalDefeated})`
+    );
+  }
+
+  // Forçar a exibição de Garrick se ele já apareceu (usando localStorage)
+  if (
+    locationId === "village_outskirts" &&
+    localStorage.getItem("garrick_appeared") === "true"
+  ) {
+    shouldShowGarrick = true;
+    console.log(
+      "Garrick já apareceu anteriormente, forçando exibição da imagem de Garrick"
+    );
+  }
+
+  // Se devemos mostrar Garrick, usar a imagem dele como fundo, caso contrário usar a imagem normal
+  let backgroundImage;
+  if (shouldShowGarrick) {
+    // Tentar usar a imagem principal de Garrick, com fallback para a alternativa e depois para a padrão
+    backgroundImage =
+      kingdomImages["garrick"] ||
+      kingdomImages["garrick_background"] ||
+      kingdomImages.default;
+    console.log("Usando imagem de Garrick como fundo:", backgroundImage);
+  } else {
+    backgroundImage = kingdomImages[locationId] || kingdomImages.default;
+  }
+
   console.log(
     `Imagem de fundo: ${backgroundImage ? "Encontrada" : "Não encontrada"}`
   );

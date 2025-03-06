@@ -710,9 +710,17 @@ const ActionMenu = ({ location, onStartCombat }) => {
         // Verificar se Garrick existe especificamente na lista ou se já foi adicionado manualmente
         const garrickDetails = enemies.find((e) => e.id === "garrick");
 
-        if (!hasGarrick && garrickDetails) {
+        console.log("DEBUG - Verificando Garrick:", {
+          hasGarrick,
+          garrickDetails,
+          locationEnemies: location.enemies,
+        });
+
+        // ALTERAÇÃO: Sempre mostrar Garrick se todos os bandidos foram derrotados
+        // Removendo a verificação de !hasGarrick que estava impedindo o botão de aparecer
+        if (garrickDetails) {
           console.log(
-            "👹 Garrick não encontrado! Adicionando manualmente no ActionMenu!"
+            "👹 Adicionando botão para combater Garrick no ActionMenu!"
           );
 
           // SOLUÇÃO SIMPLIFICADA: Adicionamos diretamente o botão de combate para Garrick
@@ -751,6 +759,37 @@ const ActionMenu = ({ location, onStartCombat }) => {
                 );
               }, 1000);
             }, 500);
+          }
+
+          // Adicionar Garrick à lista de inimigos se ele ainda não estiver lá
+          if (!hasGarrick) {
+            console.log("🔥 Forçando a adição de Garrick à lista de inimigos");
+            setGameState((prev) => {
+              // Verificar se estamos nos arredores da vila
+              if (prev.currentLocation?.id === "village_outskirts") {
+                // Adicionar Garrick aos inimigos da localização atual
+                return {
+                  ...prev,
+                  currentLocation: {
+                    ...prev.currentLocation,
+                    image: "garrick", // Forçar a mudança da imagem
+                    enemies: [
+                      ...(prev.currentLocation.enemies || []),
+                      "garrick",
+                    ],
+                  },
+                  // Atualizar a lista de inimigos para a localização
+                  updatedEnemies: {
+                    ...prev.updatedEnemies,
+                    village_outskirts: [
+                      ...(prev.updatedEnemies?.village_outskirts || []),
+                      "garrick",
+                    ],
+                  },
+                };
+              }
+              return prev;
+            });
           }
         }
       }

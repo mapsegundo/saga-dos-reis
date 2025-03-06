@@ -2,6 +2,8 @@
 import villageOutskirtsImg from "../arredores_da_vila.webp";
 import villageSquareImg from "../vila_ravenwood.webp";
 import defaultLocationImg from "./default_location.webp"; // Imagem padrão local na pasta kingdoms
+import garrickImg from "../garrick.webp"; // Importando a imagem de Garrick
+import garrickBackgroundImg from "../garrick_background.webp"; // Imagem alternativa de Garrick
 
 // Remover logs de depuração e URLs absolutas desnecessárias
 // Simplificar o código para usar diretamente as imagens importadas
@@ -12,6 +14,8 @@ const locationImages = {
   village_square: villageSquareImg, // Praça da Vila
   village_tavern: defaultLocationImg, // Taverna
   village_outskirts: villageOutskirtsImg, // Arredores da Vila
+  garrick: garrickImg, // Imagem de Garrick para quando ele aparecer
+  garrick_background: garrickBackgroundImg, // Imagem alternativa para garantir que sempre teremos uma imagem válida
 
   // Fase 2: Capital
   capital_square: defaultLocationImg, // Praça da Capital

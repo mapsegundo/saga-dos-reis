@@ -785,6 +785,20 @@ export const GameProvider = ({ children }) => {
             "🏆 Meta de 5 bandidos atingida! Missão pronta para ser concluída."
           );
 
+          // Adicionar diálogo imediatamente, independente da localização atual
+          // Isso garante que o jogador veja a mensagem mesmo que tenha mudado de localização
+          const newDialogHistory = [
+            ...prev.dialogHistory,
+            {
+              speaker: "Narrador",
+              text: "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'",
+            },
+            {
+              speaker: "Sistema",
+              text: "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão.",
+            },
+          ];
+
           // Método 1: Atualizar diretamente no currentLocation
           // Isso garante que a mudança seja visível imediatamente na interface
           if (
@@ -827,6 +841,9 @@ export const GameProvider = ({ children }) => {
                 );
                 updatedLocations[currentLocationIndex].enemies.push("garrick");
 
+                // Alterar a imagem do cenário para mostrar Garrick
+                updatedLocations[currentLocationIndex].image = "garrick";
+
                 // Mostrar as mensagens imediatamente para garantir que o jogador veja Garrick
                 // Marcamos que Garrick apareceu
                 localStorage.setItem("garrick_appeared", "true");
@@ -845,21 +862,62 @@ export const GameProvider = ({ children }) => {
                       ...updatedLocations[currentLocationIndex].enemies,
                     ],
                   },
+                  // Atualizar a localização atual para refletir a nova imagem
+                  currentLocation: {
+                    ...prev.currentLocation,
+                    image: "garrick",
+                    enemies: [...prev.currentLocation.enemies, "garrick"],
+                  },
                   // Adicionar os diálogos diretamente aqui para garantir que apareçam imediatamente
-                  dialogHistory: [
-                    ...prev.dialogHistory,
-                    {
-                      speaker: "Narrador",
-                      text: "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'",
-                    },
-                    {
-                      speaker: "Sistema",
-                      text: "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão.",
-                    },
-                  ],
+                  dialogHistory: newDialogHistory,
                 };
               }
             }
+          } else {
+            // Se o jogador não estiver nos arredores da vila, apenas atualizar o estado global
+            // e adicionar os diálogos para que ele saiba que Garrick apareceu
+            console.log(
+              "🔄 Jogador não está nos arredores da vila, apenas atualizando estado global"
+            );
+
+            // Atualizar o estado global para que Garrick apareça quando o jogador voltar aos arredores
+            const locationsArray = locations || [];
+            const outskirtIndex = locationsArray.findIndex(
+              (loc) => loc.id === "village_outskirts"
+            );
+
+            if (outskirtIndex !== -1) {
+              // Criar uma cópia segura das localizações
+              const updatedLocations = [...locationsArray];
+
+              // Verificar se Garrick já está na lista
+              const hasGarrick = updatedLocations[outskirtIndex].enemies.some(
+                (enemy) =>
+                  typeof enemy === "string"
+                    ? enemy === "garrick"
+                    : enemy.id === "garrick"
+              );
+
+              // Adicionar Garrick se ele ainda não estiver na lista
+              if (!hasGarrick) {
+                updatedLocations[outskirtIndex].enemies.push("garrick");
+                updatedLocations[outskirtIndex].image = "garrick";
+
+                // Marcar que Garrick apareceu
+                localStorage.setItem("garrick_appeared", "true");
+              }
+            }
+
+            // Retornar estado atualizado com diálogos
+            return {
+              ...prev,
+              questProgress: {
+                ...prev.questProgress,
+                mission1_2: updatedProgress,
+              },
+              // Adicionar os diálogos para informar o jogador
+              dialogHistory: newDialogHistory,
+            };
           }
         }
 
