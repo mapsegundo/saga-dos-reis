@@ -8,81 +8,67 @@ Este documento contém o plano de desenvolvimento e melhorias para o jogo "Saga 
 
 ### Alta Prioridade
 
-- [ ] Melhorar organização do código separando por domínio (combate, inventário, quests)
-- [x] Remover código duplicado e console.logs desnecessários
-- [ ] Consolidar lógica de experiência e recompensas em um único local
+- [✅] Refatoração do sistema de combate para reduzir complexidade
+- [✅] Implementação do sistema de missões com contadores de progresso
+- [ ] Implementação de um sistema de gerenciamento de diálogos
 
 ### Média Prioridade
 
-- [ ] Iniciar migração gradual para TypeScript
-- [ ] Documentar principais funções e componentes
-- [ ] Padronizar nomenclatura de variáveis e funções
+- [ ] Refatoração da lógica de recompensas para um sistema mais escalável
+- [ ] Implementação de um sistema modular de habilidades
 
 ### Baixa Prioridade
 
-- [ ] Refatorar totalmente para estrutura baseada em features
-- [ ] Implementar sistema de módulos carregados sob demanda
-- [ ] Criar documentação técnica completa
+- [ ] Otimização de performance para dispositivos móveis
 
 ## 🧠 Gerenciamento de Estado
 
 ### Alta Prioridade
 
-- [ ] Refatorar GameContext para separar concerns (combate, inventário, progresso)
-- [ ] Implementar sistema de salvamento automático
-- [x] Corrigir bugs de sincronização de estado
+- [✅] Correção do ciclo recursivo em determinadas chamadas de estado
+- [✅] Implementação de validação de estado para evitar estados inconsistentes
 
 ### Média Prioridade
 
-- [ ] Avaliar migração para Redux Toolkit ou Zustand
-- [ ] Implementar gerenciamento de estado específico para cada sistema (combate, inventário)
-- [ ] Adicionar sistema de múltiplos saves
+- [ ] Persistência do estado do jogo através de sessões (save/load)
 
 ### Baixa Prioridade
 
-- [ ] Implementar criptografia básica para saves
-- [ ] Criar sistema de checkpoints e autosave
-- [ ] Desenvolver ferramentas de debug para estado do jogo
+- [ ] Implementação de sistema de checkpoints automáticos
 
 ## 🎮 Gameplay e Balanceamento
 
 ### Alta Prioridade
 
-- [ ] Finalizar balanceamento da quest dos bandidos
-- [ ] Ajustar curva de dificuldade para níveis iniciais
-- [ ] Implementar contador de progresso para quests
+- [✅] Implementação de inimigos com diferentes níveis de dificuldade (normal/elite/boss)
+- [✅] Adição do vilão Garrick como primeiro boss do jogo
+- [ ] Sistema de progressão do jogador com habilidades desbloqueáveis
 
 ### Média Prioridade
 
-- [ ] Revisar sistema de recompensas e drops
-- [ ] Melhorar IA dos inimigos
-- [ ] Adicionar mais variedade de combate
+- [ ] Implementação de um sistema de crafting
+- [ ] Adição de mais classes jogáveis com habilidades únicas
 
 ### Baixa Prioridade
 
-- [ ] Implementar sistema de dificuldade ajustável
-- [ ] Criar sistema de reputação com facções
-- [ ] Desenvolver mecânicas de crafting
+- [ ] Sistema de reputação com facções do mundo
 
 ## 🖼️ Interface e Experiência do Usuário
 
 ### Alta Prioridade
 
-- [ ] Melhorar feedback visual para ações de combate
-- [ ] Corrigir problemas de responsividade
-- [ ] Otimizar performance em dispositivos mais lentos
+- [✅] Melhorias na interface de combate com feedback visual
+- [✅] Personalização do favicon e ícones do jogo
+- [ ] Implementação de efeitos sonoros básicos
 
 ### Média Prioridade
 
-- [ ] Implementar tema escuro
-- [ ] Adicionar animações para transições entre telas
-- [ ] Melhorar sistema de inventário com arrastar e soltar
+- [ ] Redesign da interface para telas menores (responsividade)
+- [ ] Adição de animações para ações principais
 
 ### Baixa Prioridade
 
-- [ ] Implementar customização de interface
-- [ ] Adicionar efeitos sonoros
-- [ ] Criar tutorial interativo para novos jogadores
+- [ ] Tema escuro/claro para a interface
 
 ## 📱 Plataformas e Distribuição
 

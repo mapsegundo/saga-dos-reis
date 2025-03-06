@@ -28,6 +28,21 @@ Esta é a primeira versão pública do jogo, apresentando:
 
 Para mais detalhes sobre todas as atualizações, consulte o [CHANGELOG.md](./CHANGELOG.md).
 
+## Últimas Atualizações
+
+### Março/2025
+
+- **Novos Inimigos**: Adicionado Garrick como primeiro boss do jogo. Ele aparece nos arredores da vila após derrotar 5 bandidos.
+- **Sistema de Missões**: Implementado sistema de contagem de progresso para missões, permitindo o rastreamento de inimigos derrotados.
+- **Interface Aprimorada**: Adicionado favicon personalizado com coroa e melhorado o feedback visual durante o combate.
+- **Correções de Bugs**: Resolvidos diversos problemas relacionados à exibição de imagens e sincronização de estado.
+
+Para um detalhamento completo das mudanças, consulte o [CHANGELOG.md](./CHANGELOG.md).
+
+## Próximos Passos
+
+Confira nosso [ROADMAP.md](./ROADMAP.md) para ver quais são as próximas funcionalidades planejadas.
+
 ## Como Jogar
 
 1. Instale as dependências:
@@ -97,7 +112,7 @@ Para mais detalhes sobre todas as atualizações, consulte o [CHANGELOG.md](./CH
 
 ## Contribuição
 
-Por enquanto, este é um projeto fechado para contribuições externas. Fique atento para futuras oportunidades de participação.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir um issue ou enviar um pull request.
 
 ## Copyright
 
