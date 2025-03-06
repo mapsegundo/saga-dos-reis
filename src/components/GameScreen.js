@@ -500,7 +500,7 @@ const GameScreen = () => {
 
     // Verificar se há game over
     if (gameState?.gameOver) {
-      navigate("/gameover");
+      navigate("/game-over");
     }
   }, [gameState, navigate]);
 

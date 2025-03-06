@@ -827,22 +827,11 @@ export const GameProvider = ({ children }) => {
                 );
                 updatedLocations[currentLocationIndex].enemies.push("garrick");
 
-                // Adicionar diálogo dramático
-                setTimeout(() => {
-                  addDialog(
-                    "Narrador",
-                    "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
-                  );
+                // Mostrar as mensagens imediatamente para garantir que o jogador veja Garrick
+                // Marcamos que Garrick apareceu
+                localStorage.setItem("garrick_appeared", "true");
 
-                  setTimeout(() => {
-                    addDialog(
-                      "Sistema",
-                      "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
-                    );
-                  }, 1000);
-                }, 500);
-
-                // Retornar estado atualizado sem modificar o formato de currentLocation
+                // Retornar estado atualizado com diálogo incluído para garantir que ele apareça
                 return {
                   ...prev,
                   questProgress: {
@@ -856,6 +845,18 @@ export const GameProvider = ({ children }) => {
                       ...updatedLocations[currentLocationIndex].enemies,
                     ],
                   },
+                  // Adicionar os diálogos diretamente aqui para garantir que apareçam imediatamente
+                  dialogHistory: [
+                    ...prev.dialogHistory,
+                    {
+                      speaker: "Narrador",
+                      text: "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'",
+                    },
+                    {
+                      speaker: "Sistema",
+                      text: "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão.",
+                    },
+                  ],
                 };
               }
             }

@@ -720,9 +720,16 @@ const ActionMenu = ({ location, onStartCombat }) => {
             <button
               key="garrick"
               onClick={() => handleCombat(garrickDetails)}
-              className="bg-[#d4af37] text-[#8b4513] border-2 border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left font-bold hover:bg-[#d4af37]/80 hover:-translate-y-0.5 animate-pulse"
+              className="bg-[#d4af37] text-[#8b4513] border-2 border-[#8b4513] rounded py-3 px-4 cursor-pointer transition-all duration-300 text-sm text-left font-bold hover:bg-[#d4af37]/80 hover:-translate-y-0.5 animate-pulse shadow-md shadow-amber-700/50 my-2"
             >
-              ⚔️ Combater {garrickDetails.name} {garrickDetails.emoji || ""}
+              <div className="flex items-center justify-between">
+                <span className="flex-1">
+                  ⚔️ Combater {garrickDetails.name} {garrickDetails.emoji || ""}
+                </span>
+                <span className="text-red-700 font-bold text-xs bg-amber-200 px-2 py-1 rounded animate-bounce">
+                  NOVO!
+                </span>
+              </div>
             </button>
           );
 
