@@ -64,6 +64,7 @@ export const GameProvider = ({ children }) => {
         banditArchersRemaining: 2,
       },
     },
+    updatedEnemies: {},
   });
 
   // DEBUG - Monitorar mudanças na vida e mana do jogador
@@ -168,6 +169,7 @@ export const GameProvider = ({ children }) => {
       ],
       questLog: firstMission ? [firstMission] : [],
       introductionShown: false,
+      updatedEnemies: {},
     };
 
     // Atualizar o estado do jogo
@@ -783,9 +785,6 @@ export const GameProvider = ({ children }) => {
             "🏆 Meta de 5 bandidos atingida! Missão pronta para ser concluída."
           );
 
-          // Fazer Garrick aparecer na localização atual (arredores da vila)
-          // Garrick deve aparecer no local atual onde o jogador combateu os bandidos
-
           // Método 1: Atualizar diretamente no currentLocation
           // Isso garante que a mudança seja visível imediatamente na interface
           if (
@@ -796,63 +795,69 @@ export const GameProvider = ({ children }) => {
               "🔥 Adicionando Garrick diretamente à localização atual!"
             );
 
-            // Criar uma cópia da localização atual
-            const updatedCurrentLocation = {
-              ...prev.currentLocation,
-              enemies: prev.currentLocation.enemies
-                ? [...prev.currentLocation.enemies]
-                : [],
-            };
-
-            // Verificar se Garrick já está na lista
-            const hasGarrick = updatedCurrentLocation.enemies.some((enemy) =>
-              typeof enemy === "string"
-                ? enemy === "garrick"
-                : enemy.id === "garrick"
+            // IMPORTANTE: Não modificar a estrutura do currentLocation, apenas a lista de inimigos
+            // Encontrar a localização atual nos dados de localização para modificar
+            const locationsArray = locations || [];
+            const currentLocationIndex = locationsArray.findIndex(
+              (loc) => loc.id === "village_outskirts"
             );
 
-            // Adicionar Garrick se ainda não estiver na lista
-            if (!hasGarrick) {
-              console.log("👹 Adicionando Garrick à lista de inimigos!");
-              updatedCurrentLocation.enemies.push("garrick");
+            if (currentLocationIndex !== -1) {
+              // Criar uma cópia segura das localizações
+              const updatedLocations = [...locationsArray];
 
-              // Adicionar diálogo dramático
-              setTimeout(() => {
-                addDialog(
-                  "Narrador",
-                  "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
+              // Modificar a lista de inimigos da localização village_outskirts
+              if (!updatedLocations[currentLocationIndex].enemies) {
+                updatedLocations[currentLocationIndex].enemies = [];
+              }
+
+              // Verificar se Garrick já está na lista
+              const hasGarrick = updatedLocations[
+                currentLocationIndex
+              ].enemies.some((enemy) =>
+                typeof enemy === "string"
+                  ? enemy === "garrick"
+                  : enemy.id === "garrick"
+              );
+
+              // Adicionar Garrick se ele ainda não estiver na lista
+              if (!hasGarrick) {
+                console.log(
+                  "👹 Adicionando Garrick à lista de inimigos global!"
                 );
+                updatedLocations[currentLocationIndex].enemies.push("garrick");
 
+                // Adicionar diálogo dramático
                 setTimeout(() => {
                   addDialog(
-                    "Sistema",
-                    "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
+                    "Narrador",
+                    "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
                   );
-                }, 1000);
-              }, 500);
 
-              // Retornar estado atualizado com a localização modificada e a currentLocation
-              return {
-                ...prev,
-                questProgress: {
-                  ...prev.questProgress,
-                  mission1_2: updatedProgress,
-                },
-                currentLocation: updatedCurrentLocation,
-                // Também atualizar no locations se existir
-                locations: prev.locations
-                  ? {
-                      ...prev.locations,
-                      village_outskirts: {
-                        ...prev.locations.village_outskirts,
-                        enemies: [
-                          ...(prev.locations.village_outskirts?.enemies || []),
-                          "garrick",
-                        ],
-                      },
-                    }
-                  : prev.locations,
-              };
+                  setTimeout(() => {
+                    addDialog(
+                      "Sistema",
+                      "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
+                    );
+                  }, 1000);
+                }, 500);
+
+                // Retornar estado atualizado sem modificar o formato de currentLocation
+                return {
+                  ...prev,
+                  questProgress: {
+                    ...prev.questProgress,
+                    mission1_2: updatedProgress,
+                  },
+                  // Manter o ID como valor de currentLocation, não mudar para objeto
+                  updatedEnemies: {
+                    ...prev.updatedEnemies,
+                    village_outskirts: [
+                      ...updatedLocations[currentLocationIndex].enemies,
+                    ],
+                  },
+                };
+              }
             }
           }
         }

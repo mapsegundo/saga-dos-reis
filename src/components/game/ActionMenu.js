@@ -84,43 +84,37 @@ const ActionMenu = ({ location, onStartCombat }) => {
       if (!hasGarrick) {
         console.log("🔄 Efeito: Adicionando Garrick aos arredores da vila!");
 
-        // Adicionar Garrick à localização atual
+        // NÃO MODIFICAR currentLocation - Em vez disso, vamos usar updatedEnemies
+        // para rastrear atualizações de inimigos para cada localização
         setGameState((prev) => {
-          const updatedLocation = { ...prev.currentLocation };
-
-          if (!updatedLocation.enemies) {
-            updatedLocation.enemies = [];
-          }
-
-          if (!updatedLocation.enemies.includes("garrick")) {
-            updatedLocation.enemies = [...updatedLocation.enemies, "garrick"];
-
-            // Mostrar mensagem apenas se for a primeira vez
-            if (!localStorage.getItem("garrick_appeared")) {
-              localStorage.setItem("garrick_appeared", "true");
-
-              // Adicionar mensagem após um pequeno atraso
-              setTimeout(() => {
-                addDialog(
-                  "Narrador",
-                  "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece diante de você. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
-                );
-
-                setTimeout(() => {
-                  addDialog(
-                    "Sistema",
-                    "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
-                  );
-                }, 1000);
-              }, 500);
-            }
-          }
-
           return {
             ...prev,
-            currentLocation: updatedLocation,
+            updatedEnemies: {
+              ...prev.updatedEnemies,
+              village_outskirts: [...(location.enemies || []), "garrick"],
+            },
           };
         });
+
+        // Mostrar mensagem apenas se for a primeira vez
+        if (!localStorage.getItem("garrick_appeared")) {
+          localStorage.setItem("garrick_appeared", "true");
+
+          // Adicionar mensagem após um pequeno atraso
+          setTimeout(() => {
+            addDialog(
+              "Narrador",
+              "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece diante de você. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
+            );
+
+            setTimeout(() => {
+              addDialog(
+                "Sistema",
+                "Garrick, o líder dos bandidos, apareceu nos arredores da vila! Derrote-o para completar a missão."
+              );
+            }, 1000);
+          }, 500);
+        }
       }
     }
   }, [
@@ -715,7 +709,7 @@ const ActionMenu = ({ location, onStartCombat }) => {
         );
 
         // Verificar se Garrick já está na lista de inimigos da localização
-        const hasGarrick = location.enemies.some((enemy) =>
+        const hasGarrick = location.enemies?.some((enemy) =>
           typeof enemy === "string"
             ? enemy === "garrick"
             : enemy.id === "garrick"
@@ -739,25 +733,18 @@ const ActionMenu = ({ location, onStartCombat }) => {
             </button>
           );
 
-          // Se Garrick não estiver na lista de inimigos, adicioná-lo manualmente à localização
+          // Se Garrick não estiver na lista de inimigos, adicioná-lo manualmente à lista updatedEnemies
           if (location && !hasGarrick) {
             console.log(
               "🔄 Atualizando lista de inimigos para incluir Garrick"
             );
             setGameState((prev) => {
-              const currentLocation = { ...prev.currentLocation };
-              if (!currentLocation.enemies) {
-                currentLocation.enemies = [];
-              }
-              if (!currentLocation.enemies.includes("garrick")) {
-                currentLocation.enemies = [
-                  ...currentLocation.enemies,
-                  "garrick",
-                ];
-              }
               return {
                 ...prev,
-                currentLocation,
+                updatedEnemies: {
+                  ...prev.updatedEnemies,
+                  village_outskirts: [...(location.enemies || []), "garrick"],
+                },
               };
             });
           }

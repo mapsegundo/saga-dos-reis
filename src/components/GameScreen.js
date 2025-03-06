@@ -489,6 +489,63 @@ const GameScreen = () => {
   const [showQuestLog, setShowQuestLog] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("game"); // game, inventory, questlog
+  const [locationData, setLocationData] = useState(null);
+
+  // Redirecionar para a página inicial se o jogo não estiver iniciado
+  useEffect(() => {
+    if (!gameState || !gameState.gameStarted) {
+      navigate("/");
+    }
+
+    // Verificar se há game over
+    if (gameState?.gameOver) {
+      navigate("/gameover");
+    }
+  }, [gameState, navigate]);
+
+  // Obter dados da localização atual
+  useEffect(() => {
+    if (gameState && gameState.currentLocation) {
+      try {
+        // Encontrar a localização nos dados
+        const location = locations.find(
+          (loc) => loc.id === gameState.currentLocation
+        );
+
+        if (location) {
+          // NOVO: Verificar se temos atualizações de inimigos para esta localização
+          if (
+            gameState.updatedEnemies &&
+            gameState.updatedEnemies[location.id]
+          ) {
+            console.log(
+              `📊 Aplicando lista de inimigos personalizada para ${location.id}`
+            );
+
+            // Criar uma cópia da localização com os inimigos atualizados
+            const updatedLocation = {
+              ...location,
+              enemies: gameState.updatedEnemies[location.id],
+            };
+
+            setLocationData(updatedLocation);
+          } else {
+            // Sem atualizações específicas, usar a localização original
+            setLocationData(location);
+          }
+        } else {
+          console.error(
+            `Localização não encontrada: ${gameState.currentLocation}`
+          );
+          setLocationData(null);
+        }
+      } catch (error) {
+        console.error("Erro ao obter dados da localização:", error);
+        setLocationData(null);
+      }
+    }
+  }, [gameState]);
 
   // DEBUG - Log para verificar os valores do jogador quando o GameScreen é montado
   useEffect(() => {
@@ -734,10 +791,13 @@ const GameScreen = () => {
       </DialogContent>
 
       <ActionsContent>
-        <ActionMenu
-          location={enhancedLocation}
-          onStartCombat={handleStartCombat}
-        />
+        {/* Menu de ações - combate, movimento, coleta, etc. */}
+        {gameState.currentLocation && (
+          <ActionMenu
+            location={locationData}
+            onStartCombat={handleStartCombat}
+          />
+        )}
       </ActionsContent>
     </GameContainer>
   );
