@@ -28,35 +28,52 @@ const ActionMenu = ({ location, onStartCombat }) => {
   // Estado para rastrear NPCs com quem já conversou na sessão atual para uso interno
   const [talkedToNpcs, setTalkedToNpcs] = useState([]);
 
+  // Estado para controlar erro de localização
+  const [locationError, setLocationError] = useState(false);
+
   // Obter a fase atual
   const currentPhase = phases[gameState.currentPhase];
 
+  // Verificar se location é válido - sem early return para evitar problemas com hooks
+  const locationValid = !!location;
+
+  // Todas as verificações de localização precisam usar operador opcional (?) para segurança
   // Verificar se a localização atual tem NPCs
-  const hasNPCs = location.npcs && location.npcs.length > 0;
+  const hasNPCs = locationValid && location?.npcs && location.npcs.length > 0;
 
   // Verificar se a localização atual tem inimigos
-  const hasEnemies = location.enemies && location.enemies.length > 0;
+  const hasEnemies =
+    locationValid && location?.enemies && location.enemies.length > 0;
 
   // Verificar se a localização atual tem locais conectados
   const hasConnectedLocations =
-    location.connectedLocations && location.connectedLocations.length > 0;
+    locationValid &&
+    location?.connectedLocations &&
+    location.connectedLocations.length > 0;
 
-  // Log para debug - verificar NPCs disponíveis
-  console.log("NPCs na localização atual:", location.npcs);
-  console.log("Localização atual:", location.id);
+  // Log para debug - verificar NPCs disponíveis (só se location for válido)
+  if (locationValid) {
+    console.log("NPCs na localização atual:", location?.npcs || []);
+    console.log("Localização atual:", location?.id || "desconhecida");
+  } else {
+    console.error("Location é null ou undefined em ActionMenu!");
+    setLocationError(true);
+  }
 
   // Verificar se a localização atual tem itens para coletar
   const hasItems = false; // Temporariamente desativado conforme solicitado
 
   // Verificar se estamos nos arredores da vila
-  const isVillageOutskirts = location.id === "village_outskirts";
+  const isVillageOutskirts =
+    locationValid && location?.id === "village_outskirts";
 
   // Verificar se estamos na praça da vila
-  const isVillageSquare = location.id === "village_square";
+  const isVillageSquare = locationValid && location?.id === "village_square";
 
   // Verificar se estamos na Vila de Ravenwood (village ou village_square)
   const isVillage =
-    location.id === "village" || location.id === "village_square";
+    locationValid &&
+    (location?.id === "village" || location?.id === "village_square");
 
   // Verificar se todos os bandidos foram derrotados
   const allBanditsDefeated = () => {
@@ -66,6 +83,8 @@ const ActionMenu = ({ location, onStartCombat }) => {
 
   // Efeito para verificar e adicionar Garrick quando os bandidos forem derrotados
   useEffect(() => {
+    if (!locationValid) return; // Não prosseguir se location não for válido
+
     if (
       isVillageOutskirts &&
       gameState.questProgress?.mission1_2 &&
@@ -118,12 +137,18 @@ const ActionMenu = ({ location, onStartCombat }) => {
       }
     }
   }, [
+    locationValid,
     isVillageOutskirts,
     location,
     gameState.questProgress?.mission1_2?.totalDefeated,
     addDialog,
     setGameState,
   ]);
+
+  // Se temos erro de localização, mostrar mensagem de erro
+  if (locationError) {
+    return <div className="text-red-500">Erro ao carregar o menu de ações</div>;
+  }
 
   // Ações de movimento
   const handleMove = (locationId) => {

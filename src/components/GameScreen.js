@@ -509,11 +509,21 @@ const GameScreen = () => {
     if (gameState && gameState.currentLocation) {
       try {
         // Encontrar a localização nos dados
-        const location = locations.find(
-          (loc) => loc.id === gameState.currentLocation
-        );
+        const locationId = gameState.currentLocation;
+        console.log("🔍 Buscando localização:", locationId);
+
+        // Verificar se locationId é uma string (o formato esperado)
+        if (typeof locationId !== "string") {
+          console.error("Formato de currentLocation inválido:", locationId);
+          setLocationData(null);
+          return;
+        }
+
+        const location = locations.find((loc) => loc.id === locationId);
 
         if (location) {
+          console.log("✅ Localização encontrada:", location.id);
+
           // NOVO: Verificar se temos atualizações de inimigos para esta localização
           if (
             gameState.updatedEnemies &&
@@ -535,15 +545,25 @@ const GameScreen = () => {
             setLocationData(location);
           }
         } else {
-          console.error(
-            `Localização não encontrada: ${gameState.currentLocation}`
-          );
-          setLocationData(null);
+          console.error(`⚠️ Localização não encontrada: ${locationId}`);
+
+          // Tentar recuperar-se do erro usando a primeira localização disponível
+          if (locations.length > 0) {
+            console.warn(
+              "🔄 Usando a primeira localização disponível como fallback"
+            );
+            setLocationData(locations[0]);
+          } else {
+            setLocationData(null);
+          }
         }
       } catch (error) {
-        console.error("Erro ao obter dados da localização:", error);
+        console.error("❌ Erro ao obter dados da localização:", error);
         setLocationData(null);
       }
+    } else {
+      console.warn("⚠️ gameState ou currentLocation é null/undefined");
+      setLocationData(null);
     }
   }, [gameState]);
 
@@ -792,11 +812,22 @@ const GameScreen = () => {
 
       <ActionsContent>
         {/* Menu de ações - combate, movimento, coleta, etc. */}
-        {gameState.currentLocation && (
+        {gameState?.currentLocation && locationData && (
           <ActionMenu
             location={locationData}
             onStartCombat={handleStartCombat}
           />
+        )}
+        {(!gameState?.currentLocation || !locationData) && (
+          <div className="text-red-500 p-4">
+            Erro ao carregar a localização atual.
+            {!gameState?.currentLocation && (
+              <div>Estado do jogo não contém localização.</div>
+            )}
+            {gameState?.currentLocation && !locationData && (
+              <div>Dados da localização não encontrados.</div>
+            )}
+          </div>
         )}
       </ActionsContent>
     </GameContainer>
