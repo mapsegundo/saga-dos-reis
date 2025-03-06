@@ -783,35 +783,44 @@ export const GameProvider = ({ children }) => {
             "🏆 Meta de 5 bandidos atingida! Missão pronta para ser concluída."
           );
 
-          // Fazer Garrick aparecer nos arredores da vila
-          // Correto: Tratando locations como um objeto, não como array
-          if (prev.locations && prev.locations.village_outskirts) {
-            // Criar uma cópia da localização para modificar
-            const updatedLocation = {
-              ...prev.locations.village_outskirts,
+          // Fazer Garrick aparecer na localização atual (arredores da vila)
+          // Garrick deve aparecer no local atual onde o jogador combateu os bandidos
+
+          // Método 1: Atualizar diretamente no currentLocation
+          // Isso garante que a mudança seja visível imediatamente na interface
+          if (
+            prev.currentLocation &&
+            prev.currentLocation.id === "village_outskirts"
+          ) {
+            console.log(
+              "🔥 Adicionando Garrick diretamente à localização atual!"
+            );
+
+            // Criar uma cópia da localização atual
+            const updatedCurrentLocation = {
+              ...prev.currentLocation,
+              enemies: prev.currentLocation.enemies
+                ? [...prev.currentLocation.enemies]
+                : [],
             };
 
-            // Adicionar Garrick à lista de inimigos se ele ainda não estiver lá
-            const hasGarrick = updatedLocation.enemies?.some((enemy) =>
+            // Verificar se Garrick já está na lista
+            const hasGarrick = updatedCurrentLocation.enemies.some((enemy) =>
               typeof enemy === "string"
                 ? enemy === "garrick"
                 : enemy.id === "garrick"
             );
 
+            // Adicionar Garrick se ainda não estiver na lista
             if (!hasGarrick) {
-              // Inicializar array de inimigos se não existir
-              if (!updatedLocation.enemies) {
-                updatedLocation.enemies = [];
-              }
+              console.log("👹 Adicionando Garrick à lista de inimigos!");
+              updatedCurrentLocation.enemies.push("garrick");
 
-              // Adicionar Garrick
-              updatedLocation.enemies.push("garrick");
-
-              // Adicionar mensagem informando o jogador
+              // Adicionar diálogo dramático
               setTimeout(() => {
                 addDialog(
                   "Narrador",
-                  "Após derrotar vários bandidos, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
+                  "Após derrotar o último bandido, você ouve uma risada maligna. De repente, Garrick, o líder dos bandidos, aparece ao longe. 'Então você é o herói que está matando meus homens? Vamos ver do que você é capaz!'"
                 );
 
                 setTimeout(() => {
@@ -822,17 +831,27 @@ export const GameProvider = ({ children }) => {
                 }, 1000);
               }, 500);
 
-              // Retornar estado atualizado com a localização modificada
+              // Retornar estado atualizado com a localização modificada e a currentLocation
               return {
                 ...prev,
                 questProgress: {
                   ...prev.questProgress,
                   mission1_2: updatedProgress,
                 },
-                locations: {
-                  ...prev.locations,
-                  village_outskirts: updatedLocation,
-                },
+                currentLocation: updatedCurrentLocation,
+                // Também atualizar no locations se existir
+                locations: prev.locations
+                  ? {
+                      ...prev.locations,
+                      village_outskirts: {
+                        ...prev.locations.village_outskirts,
+                        enemies: [
+                          ...(prev.locations.village_outskirts?.enemies || []),
+                          "garrick",
+                        ],
+                      },
+                    }
+                  : prev.locations,
               };
             }
           }
