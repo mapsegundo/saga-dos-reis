@@ -92,6 +92,7 @@ const CombatPage = () => {
     completeMission,
     setGameState,
     enemies,
+    recordEnemyDefeat,
   } = useGame();
 
   // Estado local para controlar se o combate já foi finalizado
@@ -374,6 +375,16 @@ const CombatPage = () => {
       console.log("Itens de equipamento desativados temporariamente");
 
       // =========== FIM DO SISTEMA DE RECOMPENSAS AJUSTADO ===========
+
+      // Registrar a derrota do inimigo para efeitos de contagem de bandidos
+      if (
+        processedEnemy.id === "bandit" ||
+        processedEnemy.id === "bandit_archer"
+      ) {
+        // Registrar a derrota para contagem da missão
+        console.log(`🎯 Registrando derrota de: ${processedEnemy.id}`);
+        recordEnemyDefeat(processedEnemy.id);
+      }
 
       // Remover o inimigo derrotado da localização atual
       const currentLocation = gameState.currentLocation;

@@ -534,30 +534,139 @@ const ActionMenu = ({ location, onStartCombat }) => {
       return null;
     }
 
-    return location.enemies.map((enemy) => {
-      if (!enemy) return null;
+    // Para debugging - vamos exibir os contadores atuais no console
+    const questProgress = gameState.questProgress?.mission1_2;
+    if (isVillageOutskirts && questProgress) {
+      console.log("🔢 Contadores de bandidos:", questProgress);
+    }
 
+    const buttons = [];
+
+    // Verificar se temos bandidos na localização
+    const hasBandits = location.enemies.some((enemy) => {
       const enemyId = typeof enemy === "string" ? enemy : enemy.id;
+      return enemyId === "bandit";
+    });
 
-      if (!enemyId) return null;
+    // Verificar se temos arqueiros na localização
+    const hasArchers = location.enemies.some((enemy) => {
+      const enemyId = typeof enemy === "string" ? enemy : enemy.id;
+      return enemyId === "bandit_archer";
+    });
 
-      // Encontrar os detalhes do inimigo
-      const enemyDetails = enemies.find((e) => e.id === enemyId);
+    // Se estamos nos arredores da vila e não temos contadores inicializados, inicializar
+    if (isVillageOutskirts && !questProgress && (hasBandits || hasArchers)) {
+      console.log(
+        "📊 Inicializando contadores de bandidos no renderEnemyButtons"
+      );
+      setGameState((prev) => ({
+        ...prev,
+        questProgress: {
+          ...prev.questProgress,
+          mission1_2: {
+            banditsDefeated: 0,
+            banditArchersDefeated: 0,
+            totalDefeated: 0,
+            requiredDefeats: 5,
+            banditsRemaining: 3,
+            banditArchersRemaining: 2,
+          },
+        },
+      }));
 
-      if (!enemyDetails) {
-        return null;
+      // Adicionar botões para bandidos e arqueiros sem contadores, para evitar recarregar
+      if (hasBandits) {
+        const enemyDetails = enemies.find((e) => e.id === "bandit");
+        if (enemyDetails) {
+          buttons.push(
+            <button
+              key="bandit"
+              onClick={() => handleCombat(enemyDetails)}
+              className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
+            >
+              Combater {enemyDetails.name} {enemyDetails.emoji || ""} (Total: 3)
+            </button>
+          );
+        }
       }
 
-      return (
-        <button
-          key={enemyId}
-          onClick={() => handleCombat(enemyDetails)}
-          className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
-        >
-          Combater {enemyDetails.name} {enemyDetails.emoji || ""}
-        </button>
-      );
-    });
+      if (hasArchers) {
+        const enemyDetails = enemies.find((e) => e.id === "bandit_archer");
+        if (enemyDetails) {
+          buttons.push(
+            <button
+              key="bandit_archer"
+              onClick={() => handleCombat(enemyDetails)}
+              className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
+            >
+              Combater {enemyDetails.name} {enemyDetails.emoji || ""} (Total: 2)
+            </button>
+          );
+        }
+      }
+    }
+    // Se temos contadores, mostrar botões com base nos valores dos contadores
+    else if (isVillageOutskirts && questProgress) {
+      // Mostrar botão para bandidos se ainda houver restantes
+      if (questProgress.banditsRemaining > 0 && hasBandits) {
+        const enemyDetails = enemies.find((e) => e.id === "bandit");
+        if (enemyDetails) {
+          buttons.push(
+            <button
+              key="bandit"
+              onClick={() => handleCombat(enemyDetails)}
+              className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
+            >
+              Combater {enemyDetails.name} {enemyDetails.emoji || ""}{" "}
+              (Restantes: {questProgress.banditsRemaining})
+            </button>
+          );
+        }
+      }
+
+      // Mostrar botão para arqueiros se ainda houver restantes
+      if (questProgress.banditArchersRemaining > 0 && hasArchers) {
+        const enemyDetails = enemies.find((e) => e.id === "bandit_archer");
+        if (enemyDetails) {
+          buttons.push(
+            <button
+              key="bandit_archer"
+              onClick={() => handleCombat(enemyDetails)}
+              className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
+            >
+              Combater {enemyDetails.name} {enemyDetails.emoji || ""}{" "}
+              (Restantes: {questProgress.banditArchersRemaining})
+            </button>
+          );
+        }
+      }
+    }
+    // Para outras localizações ou se não estamos nos arredores da vila, mostrar os inimigos normalmente
+    else {
+      location.enemies.forEach((enemy) => {
+        if (!enemy) return;
+
+        const enemyId = typeof enemy === "string" ? enemy : enemy.id;
+        if (!enemyId) return;
+
+        // Encontrar os detalhes do inimigo
+        const enemyDetails = enemies.find((e) => e.id === enemyId);
+
+        if (!enemyDetails) return;
+
+        buttons.push(
+          <button
+            key={enemyId}
+            onClick={() => handleCombat(enemyDetails)}
+            className="bg-[#8b4513]/70 text-[#d4af37] border border-[#8b4513] rounded py-2 px-4 cursor-pointer transition-all duration-300 text-sm text-left hover:bg-[#8b4513]/90 hover:-translate-y-0.5"
+          >
+            Combater {enemyDetails.name} {enemyDetails.emoji || ""}
+          </button>
+        );
+      });
+    }
+
+    return buttons;
   };
 
   // Modificar o componente para ser responsivo

@@ -54,6 +54,16 @@ export const GameProvider = ({ children }) => {
     dialogHistory: [],
     questLog: [],
     introductionShown: false,
+    questProgress: {
+      mission1_2: {
+        banditsDefeated: 0,
+        banditArchersDefeated: 0,
+        totalDefeated: 0,
+        requiredDefeats: 5,
+        banditsRemaining: 3,
+        banditArchersRemaining: 2,
+      },
+    },
   });
 
   // DEBUG - Monitorar mudanças na vida e mana do jogador
@@ -692,6 +702,100 @@ export const GameProvider = ({ children }) => {
     // );
   };
 
+  // Estado para inicializar os contadores de bandidos
+  const initializeBanditCounters = () => {
+    return {
+      banditsDefeated: 0,
+      banditArchersDefeated: 0,
+      totalDefeated: 0,
+      requiredDefeats: 5,
+      banditsRemaining: 3,
+      banditArchersRemaining: 2,
+    };
+  };
+
+  // Função para registrar a derrota de um bandido ou arqueiro bandido
+  const recordEnemyDefeat = (enemyId) => {
+    console.log(`🔄 Registrando derrota de inimigo: ${enemyId}`);
+
+    if (enemyId === "bandit" || enemyId === "bandit_archer") {
+      setGameState((prev) => {
+        // Se o progresso da missão não existir, inicializá-lo
+        if (!prev.questProgress?.mission1_2) {
+          console.log(
+            "⚙️ Inicializando contadores de bandidos na primeira derrota"
+          );
+          return {
+            ...prev,
+            questProgress: {
+              ...prev.questProgress,
+              mission1_2: initializeBanditCounters(),
+            },
+          };
+        }
+
+        // Obter os contadores atuais
+        const progress = prev.questProgress.mission1_2;
+
+        // Criar nova versão do progresso
+        const updatedProgress = { ...progress };
+
+        // Atualizar contadores com base no tipo de inimigo
+        if (enemyId === "bandit") {
+          // Verificar se ainda há bandidos para derrotar
+          if (updatedProgress.banditsRemaining <= 0) {
+            console.log("⚠️ Não há mais bandidos para derrotar");
+            return prev; // Retornar estado sem alterações
+          }
+
+          // Decrementar contador de bandidos restantes
+          updatedProgress.banditsRemaining -= 1;
+          // Incrementar contador de bandidos derrotados
+          updatedProgress.banditsDefeated += 1;
+          // Incrementar contador total
+          updatedProgress.totalDefeated += 1;
+
+          console.log(
+            `✅ Bandido derrotado! Bandidos restantes: ${updatedProgress.banditsRemaining}, Total: ${updatedProgress.totalDefeated}/5`
+          );
+        } else if (enemyId === "bandit_archer") {
+          // Verificar se ainda há arqueiros para derrotar
+          if (updatedProgress.banditArchersRemaining <= 0) {
+            console.log("⚠️ Não há mais arqueiros bandidos para derrotar");
+            return prev; // Retornar estado sem alterações
+          }
+
+          // Decrementar contador de arqueiros restantes
+          updatedProgress.banditArchersRemaining -= 1;
+          // Incrementar contador de arqueiros derrotados
+          updatedProgress.banditArchersDefeated += 1;
+          // Incrementar contador total
+          updatedProgress.totalDefeated += 1;
+
+          console.log(
+            `✅ Arqueiro bandido derrotado! Arqueiros restantes: ${updatedProgress.banditArchersRemaining}, Total: ${updatedProgress.totalDefeated}/5`
+          );
+        }
+
+        // Verificar se a missão foi completada
+        if (updatedProgress.totalDefeated >= updatedProgress.requiredDefeats) {
+          console.log(
+            "🏆 Meta de 5 bandidos atingida! Missão pronta para ser concluída."
+          );
+        }
+
+        // Retornar estado atualizado
+        return {
+          ...prev,
+          questProgress: {
+            ...prev.questProgress,
+            mission1_2: updatedProgress,
+          },
+        };
+      });
+    }
+  };
+
   // Valor do contexto
   const contextValue = {
     player,
@@ -721,6 +825,7 @@ export const GameProvider = ({ children }) => {
     classes,
     updateLocationConnections,
     addMission,
+    recordEnemyDefeat,
   };
 
   return (
