@@ -373,40 +373,6 @@ const CombatPage = () => {
       // Conforme solicitado pelo jogador, por enquanto só trabalhamos com experiência, poções e ouro
       console.log("Itens de equipamento desativados temporariamente");
 
-      /* Código original comentado:
-      if (rewardItems && Array.isArray(rewardItems)) {
-        console.log("Processando itens especiais de recompensa:", rewardItems);
-        rewardItems.forEach((item) => {
-          // Se o item for uma string (ID) ou um objeto com ID
-          const itemId = typeof item === "object" ? item.id : item;
-
-          // Ignorar poções comuns que já tratamos acima
-          if (
-            itemId &&
-            itemId !== "health_potion" &&
-            itemId !== "mana_potion" &&
-            Math.random() < (item.chance || 0.2)
-          ) {
-            addToInventory(itemId, 1);
-            console.log("Item especial adicionado ao inventário:", itemId);
-
-            // Adicionar mensagem ao diálogo
-            const itemName = typeof item === "object" ? item.name : itemId;
-            setGameState((prev) => ({
-              ...prev,
-              dialogHistory: [
-                ...prev.dialogHistory,
-                {
-                  speaker: "Sistema",
-                  text: `Você obteve: ${itemName}`,
-                },
-              ],
-            }));
-          }
-        });
-      }
-      */
-
       // =========== FIM DO SISTEMA DE RECOMPENSAS AJUSTADO ===========
 
       // Remover o inimigo derrotado da localização atual
