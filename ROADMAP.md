@@ -1,6 +1,6 @@
 # Roadmap de Desenvolvimento - Saga dos Reis
 
-_Última atualização: 05/03/2025_
+_Última atualização: 06/03/2025_
 
 Este documento contém o plano de desenvolvimento e melhorias para o jogo "Saga dos Reis", organizado por categorias e prioridades.
 
@@ -9,7 +9,7 @@ Este documento contém o plano de desenvolvimento e melhorias para o jogo "Saga 
 ### Alta Prioridade
 
 - [ ] Melhorar organização do código separando por domínio (combate, inventário, quests)
-- [ ] Remover código duplicado e console.logs desnecessários
+- [x] Remover código duplicado e console.logs desnecessários
 - [ ] Consolidar lógica de experiência e recompensas em um único local
 
 ### Média Prioridade
@@ -30,7 +30,7 @@ Este documento contém o plano de desenvolvimento e melhorias para o jogo "Saga 
 
 - [ ] Refatorar GameContext para separar concerns (combate, inventário, progresso)
 - [ ] Implementar sistema de salvamento automático
-- [ ] Corrigir bugs de sincronização de estado
+- [x] Corrigir bugs de sincronização de estado
 
 ### Média Prioridade
 
@@ -156,26 +156,28 @@ Este documento contém o plano de desenvolvimento e melhorias para o jogo "Saga 
 
 ## Próximos Sprints
 
-### Sprint 1 (Curto prazo - 2-4 semanas)
+### Sprint 1 (Curto prazo - Em andamento)
 
-- Finalizar balanceamento da quest dos bandidos
-- Corrigir bugs críticos no sistema de combate
-- Melhorar feedback visual para ações do jogador
-- Refatorar sistema de experiência
+- [x] Corrigir bugs críticos no sistema de combate
+  - [x] Resolver problema de recursão infinita no sistema de derrota
+  - [x] Limpar código não utilizado e arquivos de backup
+- [ ] Finalizar balanceamento da quest dos bandidos
+- [ ] Melhorar feedback visual para ações do jogador
+- [ ] Refatorar sistema de experiência
 
 ### Sprint 2 (Médio prazo - 1-2 meses)
 
-- Iniciar migração para TypeScript (arquivos críticos)
-- Implementar sistema de salvamento melhorado
-- Melhorar organização do código
-- Adicionar mais conteúdo à área inicial
+- [ ] Iniciar migração para TypeScript (arquivos críticos)
+- [ ] Implementar sistema de salvamento melhorado
+- [ ] Melhorar organização do código
+- [ ] Adicionar mais conteúdo à área inicial
 
 ### Sprint 3 (Longo prazo - 3+ meses)
 
-- Expandir conteúdo de jogo (novas áreas)
-- Implementar novos sistemas (crafting, fações)
-- Considerar distribuição em plataformas
-- Desenvolver versão mobile otimizada
+- [ ] Expandir conteúdo de jogo (novas áreas)
+- [ ] Implementar novos sistemas (crafting, fações)
+- [ ] Considerar distribuição em plataformas
+- [ ] Desenvolver versão mobile otimizada
 
 ---
 

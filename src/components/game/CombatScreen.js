@@ -311,7 +311,7 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
   const combatLogRef = useRef(null);
 
   // Utilidades para sincronizar o estado global do jogador com o estado local do combate
-  const syncPlayerState = (health, mana) => {
+  const syncPlayerState = (health, mana, skipDeathCheck = false) => {
     console.log(
       "Sincronizando estado do jogador:",
       health !== undefined
@@ -327,7 +327,8 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
       setPlayerHealth(health);
 
       // NOVA VERIFICAÇÃO: Se a vida chegou a zero ou menos, processar derrota automaticamente
-      if (health <= 0 && !combatEnded) {
+      // Adicionado parâmetro skipDeathCheck para evitar recursão
+      if (health <= 0 && !combatEnded && !skipDeathCheck) {
         console.log("⚠️ VIDA ZERADA! Processando derrota automática...");
         handleDefeat();
       }
@@ -908,7 +909,9 @@ const CombatScreen = ({ enemy, onCombatEnd }) => {
 
     // Garantir que a vida do jogador está zerada para consistência visual
     setPlayerHealth(0);
-    syncPlayerState(0, playerMana);
+
+    // Passar true como terceiro parâmetro para evitar verificação de morte, evitando recursão
+    syncPlayerState(0, playerMana, true);
 
     // Adicionar mensagem de derrota ao log
     addToCombatLog(`Você foi derrotado por ${enemy.name}!`);

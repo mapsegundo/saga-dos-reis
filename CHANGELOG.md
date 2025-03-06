@@ -2,7 +2,15 @@
 
 Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 
-## [Versão Atual] - 02/03/2025
+## [Versão Atual] - 06/03/2025
+
+### Correções
+
+- Corrigido erro crítico de "Maximum call stack size exceeded" no sistema de combate
+- Removido ciclo recursivo infinito entre as funções handleDefeat e syncPlayerState
+- Limpo código não utilizado e arquivos de backup desnecessários
+
+## [Versão Anterior] - 02/03/2025
 
 ### Correções
 
